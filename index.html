@@ -7,80 +7,129 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root{
-  --bg:#10161c; --surface:#1a232c; --surface2:#212c37; --line:#2c3946;
-  --text:#e7edf2; --muted:#8ea1b0;
-  --income:#4fd1a5; --expense:#f2745f; --accent:#5aa9e6;
+  --bg:#0f151a; --surface:#171f27; --surface-2:#1e2831; --border:#2a3641;
+  --text:#eef2f5; --muted:#8fa1ae; --muted-2:#66808f;
+  --income:#4ade80; --expense:#f97066; --accent:#4a9eeb;
+  --radius:12px; --radius-sm:8px;
 }
 *{box-sizing:border-box;}
-body{margin:0; background:var(--bg); color:var(--text);
+body{margin:0; background:var(--bg); color:var(--text); font-size:14px; line-height:1.45;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
-.wrap{max-width:680px; margin:0 auto; padding:28px 20px 60px;}
-header{margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-start;}
-h1{font-size:22px; font-weight:700; margin:0 0 4px;}
-.sub{color:var(--muted); font-size:14px; margin:0;}
-.signout{font-size:12px; color:var(--muted); background:none; border:1px solid var(--line); border-radius:20px; padding:5px 10px; cursor:pointer;}
+.num{font-variant-numeric:tabular-nums;}
+button,input,select{font-family:inherit;}
+.wrap{max-width:720px; margin:0 auto; padding:20px 16px 60px;}
+.hidden{display:none !important;}
+
+/* header */
+header{display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; position:relative;}
+h1{font-size:19px; font-weight:700; margin:0;}
+.avatar{width:34px; height:34px; border-radius:50%; background:var(--surface-2); border:1px solid var(--border);
+  color:var(--text); font-weight:600; font-size:14px; display:flex; align-items:center; justify-content:center; cursor:pointer;}
+.acct-menu{position:absolute; right:0; top:44px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm);
+  padding:6px; width:220px; box-shadow:0 8px 24px rgba(0,0,0,.35); z-index:20;}
+.acct-menu .email{font-size:12px; color:var(--muted); padding:8px 10px; border-bottom:1px solid var(--border); margin-bottom:4px; word-break:break-all;}
+.acct-menu button{display:block; width:100%; text-align:left; background:none; border:none; color:var(--text); padding:8px 10px;
+  border-radius:6px; cursor:pointer; font-size:13px;}
+.acct-menu button:hover{background:var(--surface-2);}
 
 /* auth */
-.auth-box{max-width:360px; margin:60px auto; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:24px;}
-.auth-box h1{text-align:center;}
-.auth-box .sub{text-align:center; margin-bottom:20px;}
+.auth-box{max-width:360px; margin:60px auto; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px;}
+.auth-box h1{text-align:center; margin-bottom:4px;}
+.sub{color:var(--muted); font-size:13px; margin:0 0 16px; text-align:center;}
 .auth-tabs{display:flex; gap:6px; margin-bottom:16px;}
-.auth-tabs button{flex:1; padding:8px; border-radius:7px; border:1px solid var(--line); background:var(--bg); color:var(--muted); cursor:pointer; font-family:inherit;}
+.auth-tabs button{flex:1; padding:8px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg); color:var(--muted); cursor:pointer;}
 .auth-tabs button.active{color:var(--text); border-color:var(--accent);}
-.err{color:var(--expense); font-size:13px; margin-top:8px; min-height:16px;}
-.msg{color:var(--income); font-size:13px; margin-top:8px; min-height:16px;}
+.err{color:var(--expense); font-size:12px; margin-top:8px; min-height:16px;}
+.msg{color:var(--income); font-size:12px; margin-top:8px; min-height:16px;}
 
-.tabs{display:flex; gap:6px; margin-bottom:18px; border-bottom:1px solid var(--line);}
-.tabs button{background:none; border:none; color:var(--muted); font-size:14px; font-family:inherit; padding:9px 4px; cursor:pointer; border-bottom:2px solid transparent; margin-right:14px;}
+/* tabs */
+.tabs{display:flex; gap:18px; margin-bottom:16px; border-bottom:1px solid var(--border);}
+.tabs button{background:none; border:none; color:var(--muted); font-size:14px; padding:9px 2px; cursor:pointer; border-bottom:2px solid transparent;}
 .tabs button.active{color:var(--text); border-color:var(--accent);}
 .view{display:none;} .view.active{display:block;}
 
-.balance-card{background:linear-gradient(135deg,var(--surface2),var(--surface)); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-end;}
-.balance-num{font-size:34px; font-weight:700;}
-.balance-label{color:var(--muted); font-size:13px; margin-bottom:6px;}
-.mini-stats{display:flex; gap:18px; font-size:14px;}
-.mini-stats div span{display:block; font-weight:600; font-size:16px;}
-.in{color:var(--income);} .out{color:var(--expense);}
+/* summary cards */
+.summary{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:20px;}
+.card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px;}
+.card .label{color:var(--muted); font-size:12px; margin-bottom:6px;}
+.card .value{font-size:19px; font-weight:700;}
+.card.balance .value{font-size:22px;}
+.card.income .value{color:var(--income);} .card.expense .value{color:var(--expense);}
+@media (max-width:480px){ .summary{grid-template-columns:1fr;} }
 
-form{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px; display:grid; grid-template-columns:1fr 1fr; gap:10px;}
-form .full{grid-column:1/-1;}
-label{font-size:12px; color:var(--muted); display:block; margin-bottom:4px;}
-input,select{width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text); padding:9px 10px; border-radius:7px; font-size:14px; font-family:inherit;}
-.toggle{display:flex; gap:6px;}
-.toggle button{flex:1; padding:9px; border-radius:7px; border:1px solid var(--line); background:var(--bg); color:var(--muted); font-size:14px; cursor:pointer; font-family:inherit;}
-.toggle button.active[data-t="income"]{background:rgba(79,209,165,.15); color:var(--income); border-color:var(--income);}
-.toggle button.active[data-t="expense"]{background:rgba(242,116,95,.15); color:var(--expense); border-color:var(--expense);}
-.add-btn{background:var(--accent); color:#0a1520; border:none; border-radius:7px; padding:10px; font-weight:600; font-size:14px; cursor:pointer;}
-.add-btn:disabled{opacity:.6;}
+section{margin-bottom:22px;}
+.sec-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;}
+.sec-head h2{font-size:13px; color:var(--muted); font-weight:600; margin:0;}
+.link-btn{background:none; border:none; color:var(--accent); font-size:12px; cursor:pointer; padding:0;}
 
-section{margin-bottom:26px;}
-section h2{font-size:14px; color:var(--muted); font-weight:600; margin:0 0 10px;}
-.bar-row{display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:13px;}
-.bar-row .name{width:88px; flex-shrink:0; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
-.bar-track{flex:1; background:var(--surface); border-radius:5px; height:8px; overflow:hidden;}
-.bar-fill{height:100%; background:var(--expense); border-radius:5px;}
-.bar-amt{width:64px; text-align:right; flex-shrink:0;}
-
-.trend{display:flex; align-items:flex-end; gap:14px; height:140px; padding:0 4px;}
-.trend-col{flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;}
-.trend-bars{display:flex; gap:3px; align-items:flex-end; height:100%;}
-.trend-bars div{width:12px; border-radius:3px 3px 0 0;}
-.trend-bars .b-in{background:var(--income);} .trend-bars .b-out{background:var(--expense);}
-.trend-label{font-size:11px; color:var(--muted); margin-top:6px;}
+/* chart */
+.chart-box{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px 14px 10px;}
 .legend{display:flex; gap:14px; font-size:12px; color:var(--muted); margin-bottom:10px;}
 .legend span{display:inline-flex; align-items:center; gap:5px;}
 .dot{width:8px; height:8px; border-radius:50%;}
+.chart{position:relative; height:150px; margin-left:44px;}
+.gridline{position:absolute; left:0; right:0; border-top:1px dashed var(--border);}
+.gridline .gl-label{position:absolute; left:-44px; top:-7px; width:38px; text-align:right; font-size:10px; color:var(--muted-2);}
+.bars-row{position:absolute; left:0; right:0; bottom:0; top:0; display:flex; align-items:flex-end; gap:12px; padding:0 4px;}
+.bar-col{flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;}
+.bar-pair{display:flex; gap:3px; align-items:flex-end; height:100%;}
+.bar-pair div{width:11px; border-radius:2px 2px 0 0; min-height:1px;}
+.b-in{background:var(--income);} .b-out{background:var(--expense);}
+.bar-label{font-size:10px; color:var(--muted); margin-top:6px;}
+.chart-empty{display:flex; flex-direction:column; align-items:center; justify-content:center; height:150px; color:var(--muted); font-size:13px; text-align:center; gap:4px;}
 
-.tx-list{display:flex; flex-direction:column; gap:6px;}
-.tx{display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:11px 13px;}
-.tx-left{display:flex; flex-direction:column; gap:2px; min-width:0;}
-.tx-cat{font-size:14px; font-weight:500;}
-.tx-meta{font-size:12px; color:var(--muted);}
-.tx-amt{font-weight:600; font-size:14px; flex-shrink:0; margin-left:10px;}
-.tx-del{background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; margin-left:8px; padding:2px 6px; border-radius:5px;}
-.tx-del:hover{color:var(--expense); background:rgba(242,116,95,.1);}
-.empty{color:var(--muted); font-size:14px; padding:20px 0; text-align:center;}
-@media (max-width:420px){ form{grid-template-columns:1fr;} }
+/* category bars */
+.bar-row{display:flex; align-items:center; gap:10px; margin-bottom:9px; font-size:13px;}
+.bar-row .name{width:84px; flex-shrink:0; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.bar-track{flex:1; background:var(--surface-2); border-radius:5px; height:7px; overflow:hidden;}
+.bar-fill{height:100%; background:var(--expense); border-radius:5px;}
+.bar-pct{width:34px; text-align:right; flex-shrink:0; color:var(--muted); font-size:12px;}
+.bar-amt{width:74px; text-align:right; flex-shrink:0;}
+
+/* entries list */
+.tx-list{display:flex; flex-direction:column; gap:1px; background:var(--border); border-radius:var(--radius); overflow:hidden; border:1px solid var(--border);}
+.tx{display:grid; grid-template-columns:1fr auto auto; align-items:center; gap:10px; background:var(--surface); padding:11px 12px;}
+.tx-left{min-width:0;}
+.tx-cat{font-size:13.5px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.tx-meta{font-size:11.5px; color:var(--muted);}
+.tx-amt{font-weight:600; font-size:13.5px; text-align:right; white-space:nowrap;}
+.tx-actions{display:flex; gap:2px; opacity:.5;}
+.tx:hover .tx-actions{opacity:1;}
+.icon-btn{background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:5px 7px; border-radius:6px;}
+.icon-btn:hover{background:var(--surface-2); color:var(--text);}
+.icon-btn.danger:hover{color:var(--expense);}
+.empty{color:var(--muted); font-size:13px; padding:22px 0; text-align:center;}
+
+/* form */
+form.entry-form{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+form .full{grid-column:1/-1;}
+label{font-size:11.5px; color:var(--muted); display:block; margin-bottom:4px;}
+input,select{width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:9px 10px; border-radius:var(--radius-sm); font-size:14px;}
+input:focus,select:focus{outline:2px solid var(--accent); outline-offset:1px;}
+.toggle{display:flex; gap:6px;}
+.toggle button{flex:1; padding:9px; border-radius:var(--radius-sm); border:1px solid var(--border); background:var(--bg); color:var(--muted); font-size:14px; cursor:pointer;}
+.toggle button.active[data-t="income"]{background:rgba(74,222,128,.14); color:var(--income); border-color:var(--income);}
+.toggle button.active[data-t="expense"]{background:rgba(249,112,102,.14); color:var(--expense); border-color:var(--expense);}
+.btn{background:var(--accent); color:#08131e; border:none; border-radius:var(--radius-sm); padding:10px; font-weight:600; font-size:14px; cursor:pointer;}
+.btn:disabled{opacity:.6;}
+.btn-secondary{background:var(--surface-2); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 12px; font-size:13px; cursor:pointer;}
+
+/* filters */
+.filters{display:grid; grid-template-columns:1.4fr 1fr 0.9fr 0.9fr; gap:8px; margin-bottom:14px;}
+@media (max-width:600px){ .filters{grid-template-columns:1fr 1fr;} }
+
+/* modal */
+.modal-overlay{position:fixed; inset:0; background:rgba(0,0,0,.55); display:flex; align-items:center; justify-content:center; z-index:50; padding:16px;}
+.modal{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:20px; width:100%; max-width:400px;}
+.modal h3{margin:0 0 14px; font-size:16px;}
+.modal-actions{display:flex; gap:8px; margin-top:14px;}
+.modal-actions .btn, .modal-actions .btn-secondary{flex:1;}
+
+/* undo toast */
+.toast{position:fixed; left:50%; bottom:24px; transform:translateX(-50%); background:var(--surface-2); border:1px solid var(--border);
+  border-radius:var(--radius-sm); padding:10px 14px; display:flex; align-items:center; gap:12px; font-size:13px; z-index:60;
+  box-shadow:0 8px 24px rgba(0,0,0,.4);}
+.toast button{background:none; border:none; color:var(--accent); font-weight:600; cursor:pointer; font-size:13px;}
 </style>
 </head>
 <body>
@@ -88,21 +137,15 @@ section h2{font-size:14px; color:var(--muted); font-weight:600; margin:0 0 10px;
 <div class="wrap" id="authScreen" style="display:none;">
   <div class="auth-box">
     <h1>Ledger</h1>
-    <p class="sub">Sign in to track your income & expenses.</p>
+    <p class="sub">Sign in to track your income &amp; expenses.</p>
     <div class="auth-tabs">
       <button data-mode="signin" class="active">Sign in</button>
       <button data-mode="signup">Sign up</button>
     </div>
     <form id="authForm">
-      <div style="margin-bottom:10px;">
-        <label>Email</label>
-        <input type="email" id="authEmail" required>
-      </div>
-      <div style="margin-bottom:10px;">
-        <label>Password</label>
-        <input type="password" id="authPassword" required minlength="6">
-      </div>
-      <button type="submit" class="add-btn" style="width:100%;" id="authBtn">Sign in</button>
+      <div style="margin-bottom:10px;"><label>Email</label><input type="email" id="authEmail" required></div>
+      <div style="margin-bottom:10px;"><label>Password</label><input type="password" id="authPassword" required minlength="6"></div>
+      <button type="submit" class="btn" style="width:100%;" id="authBtn">Sign in</button>
       <div class="err" id="authErr"></div>
       <div class="msg" id="authMsg"></div>
     </form>
@@ -111,49 +154,54 @@ section h2{font-size:14px; color:var(--muted); font-weight:600; margin:0 0 10px;
 
 <div class="wrap" id="appScreen" style="display:none;">
   <header>
+    <h1>Ledger</h1>
     <div>
-      <h1>Ledger</h1>
-      <p class="sub" id="userEmail"></p>
+      <div class="avatar" id="avatarBtn">•</div>
+      <div class="acct-menu hidden" id="acctMenu">
+        <div class="email" id="userEmail"></div>
+        <button id="openSettings">Currency &amp; export</button>
+        <button id="signOutBtn">Sign out</button>
+      </div>
     </div>
-    <button class="signout" id="signOutBtn">Sign out</button>
   </header>
 
   <div class="tabs">
     <button data-view="dash" class="active">Dashboard</button>
     <button data-view="add">Add entry</button>
+    <button data-view="history">History</button>
   </div>
 
   <div class="view active" id="view-dash">
-    <div class="balance-card">
-      <div>
-        <div class="balance-label">Balance</div>
-        <div class="balance-num" id="balance">$0.00</div>
-      </div>
-      <div class="mini-stats">
-        <div><span class="in" id="totalIn">$0</span>In</div>
-        <div><span class="out" id="totalOut">$0</span>Out</div>
-      </div>
+    <div class="summary">
+      <div class="card balance"><div class="label">Balance</div><div class="value num" id="sumBalance">—</div></div>
+      <div class="card income"><div class="label">Income</div><div class="value num" id="sumIncome">—</div></div>
+      <div class="card expense"><div class="label">Expenses</div><div class="value num" id="sumExpense">—</div></div>
     </div>
+
     <section>
-      <h2>Last 6 months</h2>
-      <div class="legend">
-        <span><span class="dot" style="background:var(--income)"></span>Income</span>
-        <span><span class="dot" style="background:var(--expense)"></span>Expense</span>
+      <div class="sec-head"><h2>Last 6 months</h2></div>
+      <div class="chart-box">
+        <div class="legend">
+          <span><span class="dot" style="background:var(--income)"></span>Income</span>
+          <span><span class="dot" style="background:var(--expense)"></span>Expense</span>
+        </div>
+        <div id="chartHolder"></div>
       </div>
-      <div class="trend" id="trend"></div>
     </section>
+
     <section>
-      <h2>Spending by category (this month)</h2>
+      <div class="sec-head"><h2>Spending by category · this month</h2></div>
       <div id="bars"></div>
     </section>
+
     <section>
-      <h2>Recent entries</h2>
-      <div class="tx-list" id="txList"></div>
+      <div class="sec-head"><h2>Recent entries</h2><button class="link-btn" id="viewAllBtn">View all →</button></div>
+      <div class="tx-list" id="recentList"></div>
     </section>
   </div>
 
   <div class="view" id="view-add">
-    <form id="form">
+    <form class="entry-form" id="form">
       <div class="full toggle">
         <button type="button" data-t="expense" class="active">Expense</button>
         <button type="button" data-t="income">Income</button>
@@ -162,35 +210,102 @@ section h2{font-size:14px; color:var(--muted); font-weight:600; margin:0 0 10px;
       <div><label>Category</label><select id="category"></select></div>
       <div><label>Date</label><input type="date" id="date" required></div>
       <div><label>Note (optional)</label><input type="text" id="note"></div>
-      <button type="submit" class="add-btn full" id="addBtn">Add entry</button>
+      <button type="submit" class="btn full" id="addBtn">Add entry</button>
+    </form>
+  </div>
+
+  <div class="view" id="view-history">
+    <div class="filters">
+      <input type="text" id="fSearch" placeholder="Search note or category">
+      <select id="fCategory"><option value="">All categories</option></select>
+      <input type="date" id="fFrom" title="From date">
+      <input type="date" id="fTo" title="To date">
+    </div>
+    <div class="tx-list" id="historyList"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="editOverlay">
+  <div class="modal">
+    <h3>Edit entry</h3>
+    <form id="editForm">
+      <div class="full toggle" style="margin-bottom:10px;">
+        <button type="button" data-t="expense">Expense</button>
+        <button type="button" data-t="income">Income</button>
+      </div>
+      <div style="margin-bottom:10px;"><label>Amount</label><input type="number" id="editAmount" step="0.01" min="0" required></div>
+      <div style="margin-bottom:10px;"><label>Category</label><select id="editCategory"></select></div>
+      <div style="margin-bottom:10px;"><label>Date</label><input type="date" id="editDate" required></div>
+      <div><label>Note</label><input type="text" id="editNote"></div>
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" id="editCancel">Cancel</button>
+        <button type="submit" class="btn" id="editSave">Save</button>
+      </div>
     </form>
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="settingsOverlay">
+  <div class="modal">
+    <h3>Currency &amp; export</h3>
+    <label>Display currency</label>
+    <select id="currencySelect" style="margin-bottom:14px;">
+      <option value="USD">USD — US Dollar</option>
+      <option value="EUR">EUR — Euro</option>
+      <option value="GBP">GBP — British Pound</option>
+      <option value="BDT">BDT — Bangladeshi Taka</option>
+      <option value="INR">INR — Indian Rupee</option>
+      <option value="JPY">JPY — Japanese Yen</option>
+      <option value="AUD">AUD — Australian Dollar</option>
+      <option value="CAD">CAD — Canadian Dollar</option>
+    </select>
+    <p class="sub" style="text-align:left; margin:0 0 14px;">This only changes how amounts are displayed — it does not convert values.</p>
+    <button type="button" class="btn-secondary" style="width:100%; margin-bottom:8px;" id="exportBtn">Export all entries as CSV</button>
+    <div class="modal-actions"><button type="button" class="btn" id="settingsClose" style="flex:1;">Done</button></div>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
 <script>
-// ---- Configure your Supabase project here ----
 const SUPABASE_URL = "https://wqdxlqduwaklmxxrjugt.supabase.co";
 const SUPABASE_KEY = "sb_publishable_iOBTMeFyLnPC_Dp5HKWRAQ_lwhnsopC";
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
 
 const EXP_CATS = ["Food","Rent","Transport","Utilities","Health","Shopping","Entertainment","Other"];
 const INC_CATS = ["Salary","Freelance","Gift","Interest","Other"];
 let type = "expense";
+let editType = "expense";
 let data = [];
 let authMode = "signin";
-const $ = id => document.getElementById(id);
+let currency = localStorage.getItem("ledger_currency") || "USD";
+let pendingDelete = null; // {entry, timer}
+
+/* ---------- formatting ---------- */
+function fmt(n){
+  try{
+    return new Intl.NumberFormat(undefined, { style:"currency", currency, minimumFractionDigits:2, maximumFractionDigits:2 }).format(n);
+  }catch(e){ return (n<0?"-":"") + currency + " " + Math.abs(n).toFixed(2); }
+}
+function niceMax(v){
+  if(v<=0) return 10;
+  const mag = Math.pow(10, Math.floor(Math.log10(v)));
+  const norm = v/mag;
+  const step = norm<=1?1:norm<=2?2:norm<=5?5:10;
+  return step*mag;
+}
+function fmtShort(n){ return n>=1000 ? Math.round(n/1000)+"k" : Math.round(n).toString(); }
 
 /* ---------- Auth ---------- */
 document.querySelectorAll(".auth-tabs button").forEach(b=>{
   b.addEventListener("click", ()=>{
     document.querySelectorAll(".auth-tabs button").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active");
-    authMode = b.dataset.mode;
+    b.classList.add("active"); authMode = b.dataset.mode;
     $("authBtn").textContent = authMode === "signin" ? "Sign in" : "Sign up";
     $("authErr").textContent = ""; $("authMsg").textContent = "";
   });
 });
-
 $("authForm").addEventListener("submit", async e=>{
   e.preventDefault();
   $("authErr").textContent = ""; $("authMsg").textContent = "";
@@ -202,59 +317,60 @@ $("authForm").addEventListener("submit", async e=>{
     : await sb.auth.signUp({ email, password });
   $("authBtn").disabled = false;
   if(error){ $("authErr").textContent = error.message; return; }
-  if(authMode === "signup"){
-    $("authMsg").textContent = "Account created. Check your email if confirmation is required, or just sign in.";
+  if(authMode === "signup") $("authMsg").textContent = "Account created. Check your email if confirmation is required, or just sign in.";
+});
+$("avatarBtn").addEventListener("click", ()=> $("acctMenu").classList.toggle("hidden"));
+document.addEventListener("click", e=>{
+  if(!$("acctMenu").contains(e.target) && e.target!==$("avatarBtn")) $("acctMenu").classList.add("hidden");
+});
+$("signOutBtn").addEventListener("click", async ()=>{ await sb.auth.signOut(); });
+sb.auth.onAuthStateChange((_e, session)=>{
+  if(session){
+    $("authScreen").style.display = "none"; $("appScreen").style.display = "block";
+    $("userEmail").textContent = session.user.email;
+    $("avatarBtn").textContent = session.user.email[0].toUpperCase();
+    loadData();
+  } else {
+    $("appScreen").style.display = "none"; $("authScreen").style.display = "block";
   }
 });
 
-$("signOutBtn").addEventListener("click", async ()=>{ await sb.auth.signOut(); });
-
-sb.auth.onAuthStateChange((_event, session)=>{
-  if(session){
-    $("authScreen").style.display = "none";
-    $("appScreen").style.display = "block";
-    $("userEmail").textContent = session.user.email;
-    loadData();
-  } else {
-    $("appScreen").style.display = "none";
-    $("authScreen").style.display = "block";
-  }
+/* ---------- Settings modal ---------- */
+$("currencySelect").value = currency;
+$("openSettings").addEventListener("click", ()=>{ $("acctMenu").classList.add("hidden"); $("settingsOverlay").classList.remove("hidden"); });
+$("settingsClose").addEventListener("click", ()=> $("settingsOverlay").classList.add("hidden"));
+$("currencySelect").addEventListener("change", e=>{
+  currency = e.target.value; localStorage.setItem("ledger_currency", currency); render();
+});
+$("exportBtn").addEventListener("click", ()=>{
+  const header = "date,type,category,amount,note\n";
+  const rows = data.map(t=> [t.date, t.type, t.category, t.amount, (t.note||"").replace(/"/g,'""')]
+    .map(v=> /[",\n]/.test(String(v)) ? `"${v}"` : v).join(",")).join("\n");
+  const blob = new Blob([header+rows], {type:"text/csv"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "ledger-export.csv"; a.click();
 });
 
 /* ---------- Tabs ---------- */
-document.querySelectorAll(".tabs button").forEach(b=>{
-  b.addEventListener("click", ()=>{
-    document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
-    document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
-    b.classList.add("active");
-    $("view-"+b.dataset.view).classList.add("active");
-  });
-});
+function showView(name){
+  document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active", x.dataset.view===name));
+  document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+  $("view-"+name).classList.add("active");
+}
+document.querySelectorAll(".tabs button").forEach(b=> b.addEventListener("click", ()=> showView(b.dataset.view)));
+$("viewAllBtn").addEventListener("click", ()=> showView("history"));
 
+/* ---------- Add form ---------- */
 $("date").value = new Date().toISOString().slice(0,10);
-function refreshCategories(){
-  const sel = $("category"); sel.innerHTML = "";
-  (type === "expense" ? EXP_CATS : INC_CATS).forEach(c=>{
-    const o = document.createElement("option"); o.value = c; o.textContent = c; sel.appendChild(o);
-  });
-}
-refreshCategories();
-document.querySelectorAll(".toggle button").forEach(btn=>{
+function fillCats(sel, t){ sel.innerHTML=""; (t==="expense"?EXP_CATS:INC_CATS).forEach(c=>{
+  const o=document.createElement("option"); o.value=c; o.textContent=c; sel.appendChild(o); }); }
+fillCats($("category"), type);
+document.querySelectorAll('#form .toggle button').forEach(btn=>{
   btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".toggle button").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active"); type = btn.dataset.t; refreshCategories();
+    document.querySelectorAll('#form .toggle button').forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active"); type = btn.dataset.t; fillCats($("category"), type);
   });
 });
-
-function fmt(n){ const s = n<0?"-":""; return s+"$"+Math.abs(n).toFixed(2); }
-
-/* ---------- Data ---------- */
-async function loadData(){
-  const { data: rows, error } = await sb.from("transactions").select("*").order("date",{ascending:false}).limit(500);
-  if(!error) data = rows || [];
-  render();
-}
-
 $("form").addEventListener("submit", async e=>{
   e.preventDefault();
   const amount = parseFloat($("amount").value);
@@ -262,41 +378,165 @@ $("form").addEventListener("submit", async e=>{
   const { data:{ user } } = await sb.auth.getUser();
   $("addBtn").disabled = true;
   const { error } = await sb.from("transactions").insert({
-    user_id: user.id, type, amount,
-    category: $("category").value, date: $("date").value, note: $("note").value.trim()
+    user_id: user.id, type, amount, category: $("category").value, date: $("date").value, note: $("note").value.trim()
   });
   $("addBtn").disabled = false;
-  if(!error){
-    $("amount").value = ""; $("note").value = "";
-    await loadData();
-    document.querySelector('[data-view="dash"]').click();
-  }
+  if(!error){ $("amount").value=""; $("note").value=""; await loadData(); showView("dash"); }
 });
 
-async function removeEntry(id){
-  await sb.from("transactions").delete().eq("id", id);
-  await loadData();
+/* ---------- Edit ---------- */
+fillCats($("editCategory"), "expense");
+document.querySelectorAll('#editForm .toggle button').forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll('#editForm .toggle button').forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active"); editType = btn.dataset.t; fillCats($("editCategory"), editType);
+  });
+});
+let editingId = null;
+function openEdit(t){
+  editingId = t.id; editType = t.type;
+  document.querySelectorAll('#editForm .toggle button').forEach(b=> b.classList.toggle("active", b.dataset.t===editType));
+  fillCats($("editCategory"), editType);
+  $("editAmount").value = t.amount; $("editCategory").value = t.category;
+  $("editDate").value = t.date; $("editNote").value = t.note || "";
+  $("editOverlay").classList.remove("hidden");
+}
+$("editCancel").addEventListener("click", ()=> $("editOverlay").classList.add("hidden"));
+$("editForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  $("editSave").disabled = true;
+  const { error } = await sb.from("transactions").update({
+    type: editType, amount: parseFloat($("editAmount").value), category: $("editCategory").value,
+    date: $("editDate").value, note: $("editNote").value.trim()
+  }).eq("id", editingId);
+  $("editSave").disabled = false;
+  if(!error){ $("editOverlay").classList.add("hidden"); await loadData(); }
+});
+
+/* ---------- Delete with undo ---------- */
+function showToast(msg, onUndo){
+  const toast = $("toast");
+  toast.innerHTML = `<span>${msg}</span>`;
+  const btn = document.createElement("button"); btn.textContent = "Undo";
+  btn.addEventListener("click", onUndo);
+  toast.appendChild(btn);
+  toast.classList.remove("hidden");
+}
+function hideToast(){ $("toast").classList.add("hidden"); }
+
+function requestDelete(t){
+  if(pendingDelete) finalizePendingDelete();
+  data = data.filter(x=> x.id !== t.id);
+  render();
+  const timer = setTimeout(()=> finalizePendingDelete(), 6000);
+  pendingDelete = { entry: t, timer };
+  showToast("Entry deleted.", undoDelete);
+}
+function undoDelete(){
+  if(!pendingDelete) return;
+  clearTimeout(pendingDelete.timer);
+  data.push(pendingDelete.entry);
+  pendingDelete = null;
+  hideToast();
+  render();
+}
+async function finalizePendingDelete(){
+  if(!pendingDelete) return;
+  const { entry } = pendingDelete; pendingDelete = null;
+  hideToast();
+  await sb.from("transactions").delete().eq("id", entry.id);
 }
 
+/* ---------- Data ---------- */
+async function loadData(){
+  const { data: rows, error } = await sb.from("transactions").select("*").order("date",{ascending:false}).limit(500);
+  if(!error) data = rows || [];
+  populateCategoryFilter();
+  render();
+}
+function populateCategoryFilter(){
+  const sel = $("fCategory"); const current = sel.value;
+  const cats = [...new Set(data.map(t=>t.category))].sort();
+  sel.innerHTML = '<option value="">All categories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join("");
+  sel.value = current;
+}
+
+/* ---------- Filters (History) ---------- */
+["fSearch","fCategory","fFrom","fTo"].forEach(id=> $(id).addEventListener("input", renderHistory));
+
+function filteredData(){
+  const q = $("fSearch").value.trim().toLowerCase();
+  const cat = $("fCategory").value;
+  const from = $("fFrom").value; const to = $("fTo").value;
+  return data.filter(t=>{
+    if(q && !((t.note||"").toLowerCase().includes(q) || t.category.toLowerCase().includes(q))) return false;
+    if(cat && t.category !== cat) return false;
+    if(from && t.date < from) return false;
+    if(to && t.date > to) return false;
+    return true;
+  });
+}
+
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function txRow(t, showActions=true){
+  const row = document.createElement("div"); row.className = "tx";
+  row.innerHTML = `
+    <div class="tx-left">
+      <div class="tx-cat">${t.category}${t.note ? " · "+escapeHtml(t.note) : ""}</div>
+      <div class="tx-meta">${t.date}</div>
+    </div>
+    <div class="tx-amt num" style="color:${t.type==='income'?'var(--income)':'var(--expense)'}">
+      ${t.type==='income'?'+':'−'}${fmt(Math.abs(Number(t.amount)))}
+    </div>
+    <div class="tx-actions">
+      ${showActions ? `<button class="icon-btn edit-btn" data-id="${t.id}" title="Edit">✎</button>
+      <button class="icon-btn danger del-btn" data-id="${t.id}" title="Delete">🗑</button>` : ""}
+    </div>`;
+  return row;
+}
+
+function wireRowActions(container){
+  container.querySelectorAll(".edit-btn").forEach(b=> b.addEventListener("click", ()=>{
+    const t = data.find(x=> String(x.id)===b.dataset.id); if(t) openEdit(t);
+  }));
+  container.querySelectorAll(".del-btn").forEach(b=> b.addEventListener("click", ()=>{
+    const t = data.find(x=> String(x.id)===b.dataset.id); if(t) requestDelete(t);
+  }));
+}
+
+function renderHistory(){
+  const list = $("historyList"); list.innerHTML = "";
+  const rows = filteredData();
+  if(rows.length===0){ list.innerHTML = '<div class="empty">No entries match your filters.</div>'; return; }
+  rows.forEach(t=> list.appendChild(txRow(t)));
+  wireRowActions(list);
+}
+
+/* ---------- Main render ---------- */
 function render(){
   let inTotal=0, outTotal=0;
   data.forEach(t=> t.type==="income" ? inTotal+=Number(t.amount) : outTotal+=Number(t.amount));
-  $("balance").textContent = fmt(inTotal-outTotal);
-  $("totalIn").textContent = fmt(inTotal);
-  $("totalOut").textContent = fmt(outTotal);
+  $("sumBalance").textContent = fmt(inTotal-outTotal);
+  $("sumIncome").textContent = fmt(inTotal);
+  $("sumExpense").textContent = fmt(outTotal);
 
   const now = new Date();
   const monthKey = now.toISOString().slice(0,7);
   const byCat = {};
   data.filter(t=>t.type==="expense" && t.date.slice(0,7)===monthKey)
       .forEach(t=>{ byCat[t.category] = (byCat[t.category]||0) + Number(t.amount); });
+  const totalCat = Object.values(byCat).reduce((a,b)=>a+b,0) || 1;
   const maxCat = Math.max(1, ...Object.values(byCat));
   const barsEl = $("bars"); barsEl.innerHTML = "";
   const sortedCat = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
   if(sortedCat.length===0){ barsEl.innerHTML = '<div class="empty">No expenses logged this month yet.</div>'; }
   else sortedCat.forEach(([cat,amt])=>{
     const row = document.createElement("div"); row.className="bar-row";
-    row.innerHTML = `<div class="name">${cat}</div><div class="bar-track"><div class="bar-fill" style="width:${(amt/maxCat*100).toFixed(0)}%"></div></div><div class="bar-amt">${fmt(amt)}</div>`;
+    row.innerHTML = `<div class="name">${cat}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${(amt/maxCat*100).toFixed(0)}%"></div></div>
+      <div class="bar-pct">${Math.round(amt/totalCat*100)}%</div>
+      <div class="bar-amt num">${fmt(amt)}</div>`;
     barsEl.appendChild(row);
   });
 
@@ -309,24 +549,37 @@ function render(){
     const m = months.find(x=>x.key===t.date.slice(0,7));
     if(m){ if(t.type==="income") m.inc+=Number(t.amount); else m.exp+=Number(t.amount); }
   });
-  const maxTrend = Math.max(1, ...months.map(m=>Math.max(m.inc,m.exp)));
-  const trendEl = $("trend"); trendEl.innerHTML = "";
-  months.forEach(m=>{
-    const col = document.createElement("div"); col.className="trend-col";
-    col.innerHTML = `<div class="trend-bars"><div class="b-in" style="height:${(m.inc/maxTrend*110).toFixed(0)}px"></div><div class="b-out" style="height:${(m.exp/maxTrend*110).toFixed(0)}px"></div></div><div class="trend-label">${m.label}</div>`;
-    trendEl.appendChild(col);
-  });
+  const hasChartData = months.some(m=> m.inc>0 || m.exp>0);
+  const holder = $("chartHolder"); holder.innerHTML = "";
+  if(!hasChartData){
+    holder.innerHTML = '<div class="chart-empty">Not enough data yet.<br>Add a few entries to see your trend.</div>';
+  } else {
+    const scale = niceMax(Math.max(...months.map(m=>Math.max(m.inc,m.exp))));
+    const chart = document.createElement("div"); chart.className = "chart";
+    [0,0.5,1].forEach(f=>{
+      const gl = document.createElement("div"); gl.className = "gridline"; gl.style.bottom = (f*100)+"%";
+      gl.innerHTML = `<span class="gl-label">${fmtShort(scale*f)}</span>`;
+      chart.appendChild(gl);
+    });
+    const barsRow = document.createElement("div"); barsRow.className = "bars-row";
+    months.forEach(m=>{
+      const col = document.createElement("div"); col.className = "bar-col";
+      col.innerHTML = `<div class="bar-pair">
+          <div class="b-in" style="height:${(m.inc/scale*100).toFixed(0)}%" title="Income ${fmt(m.inc)}"></div>
+          <div class="b-out" style="height:${(m.exp/scale*100).toFixed(0)}%" title="Expense ${fmt(m.exp)}"></div>
+        </div>
+        <div class="bar-label">${m.label}</div>`;
+      barsRow.appendChild(col);
+    });
+    chart.appendChild(barsRow);
+    holder.appendChild(chart);
+  }
 
-  const list = $("txList"); list.innerHTML = "";
-  if(data.length===0){ list.innerHTML = '<div class="empty">Nothing logged yet. Add your first entry.</div>'; }
-  else data.slice(0,50).forEach(t=>{
-    const row = document.createElement("div"); row.className="tx";
-    row.innerHTML = `<div class="tx-left"><div class="tx-cat">${t.category}${t.note?" · "+t.note:""}</div><div class="tx-meta">${t.date}</div></div>
-      <div class="tx-amt ${t.type==='income'?'in':'out'}">${t.type==='income'?'+':'-'}${fmt(Number(t.amount)).replace('-','')}</div>
-      <button class="tx-del" data-id="${t.id}">✕</button>`;
-    list.appendChild(row);
-  });
-  list.querySelectorAll(".tx-del").forEach(b=> b.addEventListener("click", ()=> removeEntry(b.dataset.id)));
+  const recent = $("recentList"); recent.innerHTML = "";
+  if(data.length===0){ recent.innerHTML = '<div class="empty">Nothing logged yet. Add your first entry.</div>'; }
+  else { data.slice(0,5).forEach(t=> recent.appendChild(txRow(t))); wireRowActions(recent); }
+
+  renderHistory();
 }
 </script>
 </body>
