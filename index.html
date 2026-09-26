@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ledger</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{
+  --bg:#10161c; --surface:#1a232c; --surface2:#212c37; --line:#2c3946;
+  --text:#e7edf2; --muted:#8ea1b0;
+  --income:#4fd1a5; --expense:#f2745f; --accent:#5aa9e6;
+}
+*{box-sizing:border-box;}
+body{margin:0; background:var(--bg); color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+.wrap{max-width:680px; margin:0 auto; padding:28px 20px 60px;}
+header{margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-start;}
+h1{font-size:22px; font-weight:700; margin:0 0 4px;}
+.sub{color:var(--muted); font-size:14px; margin:0;}
+.signout{font-size:12px; color:var(--muted); background:none; border:1px solid var(--line); border-radius:20px; padding:5px 10px; cursor:pointer;}
+
+/* auth */
+.auth-box{max-width:360px; margin:60px auto; background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:24px;}
+.auth-box h1{text-align:center;}
+.auth-box .sub{text-align:center; margin-bottom:20px;}
+.auth-tabs{display:flex; gap:6px; margin-bottom:16px;}
+.auth-tabs button{flex:1; padding:8px; border-radius:7px; border:1px solid var(--line); background:var(--bg); color:var(--muted); cursor:pointer; font-family:inherit;}
+.auth-tabs button.active{color:var(--text); border-color:var(--accent);}
+.err{color:var(--expense); font-size:13px; margin-top:8px; min-height:16px;}
+.msg{color:var(--income); font-size:13px; margin-top:8px; min-height:16px;}
+
+.tabs{display:flex; gap:6px; margin-bottom:18px; border-bottom:1px solid var(--line);}
+.tabs button{background:none; border:none; color:var(--muted); font-size:14px; font-family:inherit; padding:9px 4px; cursor:pointer; border-bottom:2px solid transparent; margin-right:14px;}
+.tabs button.active{color:var(--text); border-color:var(--accent);}
+.view{display:none;} .view.active{display:block;}
+
+.balance-card{background:linear-gradient(135deg,var(--surface2),var(--surface)); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:20px; display:flex; justify-content:space-between; align-items:flex-end;}
+.balance-num{font-size:34px; font-weight:700;}
+.balance-label{color:var(--muted); font-size:13px; margin-bottom:6px;}
+.mini-stats{display:flex; gap:18px; font-size:14px;}
+.mini-stats div span{display:block; font-weight:600; font-size:16px;}
+.in{color:var(--income);} .out{color:var(--expense);}
+
+form{background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:16px; display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+form .full{grid-column:1/-1;}
+label{font-size:12px; color:var(--muted); display:block; margin-bottom:4px;}
+input,select{width:100%; background:var(--bg); border:1px solid var(--line); color:var(--text); padding:9px 10px; border-radius:7px; font-size:14px; font-family:inherit;}
+.toggle{display:flex; gap:6px;}
+.toggle button{flex:1; padding:9px; border-radius:7px; border:1px solid var(--line); background:var(--bg); color:var(--muted); font-size:14px; cursor:pointer; font-family:inherit;}
+.toggle button.active[data-t="income"]{background:rgba(79,209,165,.15); color:var(--income); border-color:var(--income);}
+.toggle button.active[data-t="expense"]{background:rgba(242,116,95,.15); color:var(--expense); border-color:var(--expense);}
+.add-btn{background:var(--accent); color:#0a1520; border:none; border-radius:7px; padding:10px; font-weight:600; font-size:14px; cursor:pointer;}
+.add-btn:disabled{opacity:.6;}
+
+section{margin-bottom:26px;}
+section h2{font-size:14px; color:var(--muted); font-weight:600; margin:0 0 10px;}
+.bar-row{display:flex; align-items:center; gap:10px; margin-bottom:8px; font-size:13px;}
+.bar-row .name{width:88px; flex-shrink:0; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.bar-track{flex:1; background:var(--surface); border-radius:5px; height:8px; overflow:hidden;}
+.bar-fill{height:100%; background:var(--expense); border-radius:5px;}
+.bar-amt{width:64px; text-align:right; flex-shrink:0;}
+
+.trend{display:flex; align-items:flex-end; gap:14px; height:140px; padding:0 4px;}
+.trend-col{flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end;}
+.trend-bars{display:flex; gap:3px; align-items:flex-end; height:100%;}
+.trend-bars div{width:12px; border-radius:3px 3px 0 0;}
+.trend-bars .b-in{background:var(--income);} .trend-bars .b-out{background:var(--expense);}
+.trend-label{font-size:11px; color:var(--muted); margin-top:6px;}
+.legend{display:flex; gap:14px; font-size:12px; color:var(--muted); margin-bottom:10px;}
+.legend span{display:inline-flex; align-items:center; gap:5px;}
+.dot{width:8px; height:8px; border-radius:50%;}
+
+.tx-list{display:flex; flex-direction:column; gap:6px;}
+.tx{display:flex; justify-content:space-between; align-items:center; background:var(--surface); border:1px solid var(--line); border-radius:9px; padding:11px 13px;}
+.tx-left{display:flex; flex-direction:column; gap:2px; min-width:0;}
+.tx-cat{font-size:14px; font-weight:500;}
+.tx-meta{font-size:12px; color:var(--muted);}
+.tx-amt{font-weight:600; font-size:14px; flex-shrink:0; margin-left:10px;}
+.tx-del{background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; margin-left:8px; padding:2px 6px; border-radius:5px;}
+.tx-del:hover{color:var(--expense); background:rgba(242,116,95,.1);}
+.empty{color:var(--muted); font-size:14px; padding:20px 0; text-align:center;}
+@media (max-width:420px){ form{grid-template-columns:1fr;} }
+</style>
+</head>
+<body>
+
+<div class="wrap" id="authScreen" style="display:none;">
+  <div class="auth-box">
+    <h1>Ledger</h1>
+    <p class="sub">Sign in to track your income & expenses.</p>
+    <div class="auth-tabs">
+      <button data-mode="signin" class="active">Sign in</button>
+      <button data-mode="signup">Sign up</button>
+    </div>
+    <form id="authForm">
+      <div style="margin-bottom:10px;">
+        <label>Email</label>
+        <input type="email" id="authEmail" required>
+      </div>
+      <div style="margin-bottom:10px;">
+        <label>Password</label>
+        <input type="password" id="authPassword" required minlength="6">
+      </div>
+      <button type="submit" class="add-btn" style="width:100%;" id="authBtn">Sign in</button>
+      <div class="err" id="authErr"></div>
+      <div class="msg" id="authMsg"></div>
+    </form>
+  </div>
+</div>
+
+<div class="wrap" id="appScreen" style="display:none;">
+  <header>
+    <div>
+      <h1>Ledger</h1>
+      <p class="sub" id="userEmail"></p>
+    </div>
+    <button class="signout" id="signOutBtn">Sign out</button>
+  </header>
+
+  <div class="tabs">
+    <button data-view="dash" class="active">Dashboard</button>
+    <button data-view="add">Add entry</button>
+  </div>
+
+  <div class="view active" id="view-dash">
+    <div class="balance-card">
+      <div>
+        <div class="balance-label">Balance</div>
+        <div class="balance-num" id="balance">$0.00</div>
+      </div>
+      <div class="mini-stats">
+        <div><span class="in" id="totalIn">$0</span>In</div>
+        <div><span class="out" id="totalOut">$0</span>Out</div>
+      </div>
+    </div>
+    <section>
+      <h2>Last 6 months</h2>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--income)"></span>Income</span>
+        <span><span class="dot" style="background:var(--expense)"></span>Expense</span>
+      </div>
+      <div class="trend" id="trend"></div>
+    </section>
+    <section>
+      <h2>Spending by category (this month)</h2>
+      <div id="bars"></div>
+    </section>
+    <section>
+      <h2>Recent entries</h2>
+      <div class="tx-list" id="txList"></div>
+    </section>
+  </div>
+
+  <div class="view" id="view-add">
+    <form id="form">
+      <div class="full toggle">
+        <button type="button" data-t="expense" class="active">Expense</button>
+        <button type="button" data-t="income">Income</button>
+      </div>
+      <div><label>Amount</label><input type="number" id="amount" step="0.01" min="0" required></div>
+      <div><label>Category</label><select id="category"></select></div>
+      <div><label>Date</label><input type="date" id="date" required></div>
+      <div><label>Note (optional)</label><input type="text" id="note"></div>
+      <button type="submit" class="add-btn full" id="addBtn">Add entry</button>
+    </form>
+  </div>
+</div>
+
+<script>
+// ---- Configure your Supabase project here ----
+const SUPABASE_URL = "https://wqdxlqduwaklmxxrjugt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_iOBTMeFyLnPC_Dp5HKWRAQ_lwhnsopC";
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const EXP_CATS = ["Food","Rent","Transport","Utilities","Health","Shopping","Entertainment","Other"];
+const INC_CATS = ["Salary","Freelance","Gift","Interest","Other"];
+let type = "expense";
+let data = [];
+let authMode = "signin";
+const $ = id => document.getElementById(id);
+
+/* ---------- Auth ---------- */
+document.querySelectorAll(".auth-tabs button").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    document.querySelectorAll(".auth-tabs button").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    authMode = b.dataset.mode;
+    $("authBtn").textContent = authMode === "signin" ? "Sign in" : "Sign up";
+    $("authErr").textContent = ""; $("authMsg").textContent = "";
+  });
+});
+
+$("authForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  $("authErr").textContent = ""; $("authMsg").textContent = "";
+  $("authBtn").disabled = true;
+  const email = $("authEmail").value.trim();
+  const password = $("authPassword").value;
+  const { error } = authMode === "signin"
+    ? await sb.auth.signInWithPassword({ email, password })
+    : await sb.auth.signUp({ email, password });
+  $("authBtn").disabled = false;
+  if(error){ $("authErr").textContent = error.message; return; }
+  if(authMode === "signup"){
+    $("authMsg").textContent = "Account created. Check your email if confirmation is required, or just sign in.";
+  }
+});
+
+$("signOutBtn").addEventListener("click", async ()=>{ await sb.auth.signOut(); });
+
+sb.auth.onAuthStateChange((_event, session)=>{
+  if(session){
+    $("authScreen").style.display = "none";
+    $("appScreen").style.display = "block";
+    $("userEmail").textContent = session.user.email;
+    loadData();
+  } else {
+    $("appScreen").style.display = "none";
+    $("authScreen").style.display = "block";
+  }
+});
+
+/* ---------- Tabs ---------- */
+document.querySelectorAll(".tabs button").forEach(b=>{
+  b.addEventListener("click", ()=>{
+    document.querySelectorAll(".tabs button").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    $("view-"+b.dataset.view).classList.add("active");
+  });
+});
+
+$("date").value = new Date().toISOString().slice(0,10);
+function refreshCategories(){
+  const sel = $("category"); sel.innerHTML = "";
+  (type === "expense" ? EXP_CATS : INC_CATS).forEach(c=>{
+    const o = document.createElement("option"); o.value = c; o.textContent = c; sel.appendChild(o);
+  });
+}
+refreshCategories();
+document.querySelectorAll(".toggle button").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll(".toggle button").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active"); type = btn.dataset.t; refreshCategories();
+  });
+});
+
+function fmt(n){ const s = n<0?"-":""; return s+"$"+Math.abs(n).toFixed(2); }
+
+/* ---------- Data ---------- */
+async function loadData(){
+  const { data: rows, error } = await sb.from("transactions").select("*").order("date",{ascending:false}).limit(500);
+  if(!error) data = rows || [];
+  render();
+}
+
+$("form").addEventListener("submit", async e=>{
+  e.preventDefault();
+  const amount = parseFloat($("amount").value);
+  if(!amount || amount<=0) return;
+  const { data:{ user } } = await sb.auth.getUser();
+  $("addBtn").disabled = true;
+  const { error } = await sb.from("transactions").insert({
+    user_id: user.id, type, amount,
+    category: $("category").value, date: $("date").value, note: $("note").value.trim()
+  });
+  $("addBtn").disabled = false;
+  if(!error){
+    $("amount").value = ""; $("note").value = "";
+    await loadData();
+    document.querySelector('[data-view="dash"]').click();
+  }
+});
+
+async function removeEntry(id){
+  await sb.from("transactions").delete().eq("id", id);
+  await loadData();
+}
+
+function render(){
+  let inTotal=0, outTotal=0;
+  data.forEach(t=> t.type==="income" ? inTotal+=Number(t.amount) : outTotal+=Number(t.amount));
+  $("balance").textContent = fmt(inTotal-outTotal);
+  $("totalIn").textContent = fmt(inTotal);
+  $("totalOut").textContent = fmt(outTotal);
+
+  const now = new Date();
+  const monthKey = now.toISOString().slice(0,7);
+  const byCat = {};
+  data.filter(t=>t.type==="expense" && t.date.slice(0,7)===monthKey)
+      .forEach(t=>{ byCat[t.category] = (byCat[t.category]||0) + Number(t.amount); });
+  const maxCat = Math.max(1, ...Object.values(byCat));
+  const barsEl = $("bars"); barsEl.innerHTML = "";
+  const sortedCat = Object.entries(byCat).sort((a,b)=>b[1]-a[1]);
+  if(sortedCat.length===0){ barsEl.innerHTML = '<div class="empty">No expenses logged this month yet.</div>'; }
+  else sortedCat.forEach(([cat,amt])=>{
+    const row = document.createElement("div"); row.className="bar-row";
+    row.innerHTML = `<div class="name">${cat}</div><div class="bar-track"><div class="bar-fill" style="width:${(amt/maxCat*100).toFixed(0)}%"></div></div><div class="bar-amt">${fmt(amt)}</div>`;
+    barsEl.appendChild(row);
+  });
+
+  const months = [];
+  for(let i=5;i>=0;i--){
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({key:d.toISOString().slice(0,7), label:d.toLocaleDateString(undefined,{month:'short'}), inc:0, exp:0});
+  }
+  data.forEach(t=>{
+    const m = months.find(x=>x.key===t.date.slice(0,7));
+    if(m){ if(t.type==="income") m.inc+=Number(t.amount); else m.exp+=Number(t.amount); }
+  });
+  const maxTrend = Math.max(1, ...months.map(m=>Math.max(m.inc,m.exp)));
+  const trendEl = $("trend"); trendEl.innerHTML = "";
+  months.forEach(m=>{
+    const col = document.createElement("div"); col.className="trend-col";
+    col.innerHTML = `<div class="trend-bars"><div class="b-in" style="height:${(m.inc/maxTrend*110).toFixed(0)}px"></div><div class="b-out" style="height:${(m.exp/maxTrend*110).toFixed(0)}px"></div></div><div class="trend-label">${m.label}</div>`;
+    trendEl.appendChild(col);
+  });
+
+  const list = $("txList"); list.innerHTML = "";
+  if(data.length===0){ list.innerHTML = '<div class="empty">Nothing logged yet. Add your first entry.</div>'; }
+  else data.slice(0,50).forEach(t=>{
+    const row = document.createElement("div"); row.className="tx";
+    row.innerHTML = `<div class="tx-left"><div class="tx-cat">${t.category}${t.note?" · "+t.note:""}</div><div class="tx-meta">${t.date}</div></div>
+      <div class="tx-amt ${t.type==='income'?'in':'out'}">${t.type==='income'?'+':'-'}${fmt(Number(t.amount)).replace('-','')}</div>
+      <button class="tx-del" data-id="${t.id}">✕</button>`;
+    list.appendChild(row);
+  });
+  list.querySelectorAll(".tx-del").forEach(b=> b.addEventListener("click", ()=> removeEntry(b.dataset.id)));
+}
+</script>
+</body>
+</html>
