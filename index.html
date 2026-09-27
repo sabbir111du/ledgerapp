@@ -169,8 +169,8 @@ input:focus,select:focus{outline:none; border-color:var(--border-strong); box-sh
       <button data-mode="signup">Sign up</button>
     </div>
     <form id="authForm">
-      <div style="margin-bottom:10px;"><label>Email</label><input type="email" id="authEmail" required></div>
-      <div style="margin-bottom:10px;"><label>Password</label><input type="password" id="authPassword" required minlength="6"></div>
+      <div style="margin-bottom:10px;"><label>Email</label><input type="email" id="authEmail" autocomplete="email" required></div>
+      <div style="margin-bottom:10px;"><label>Password</label><input type="password" id="authPassword" autocomplete="current-password" required minlength="6"></div>
       <button type="submit" class="btn" style="width:100%;" id="authBtn">Sign in</button>
       <div class="err" id="authErr"></div>
       <div class="msg" id="authMsg"></div>
@@ -327,6 +327,8 @@ document.querySelectorAll(".auth-tabs button").forEach(b=>{
     b.classList.add("active"); authMode = b.dataset.mode;
     $("authBtn").textContent = authMode === "signin" ? "Sign in" : "Sign up";
     $("authErr").textContent = ""; $("authMsg").textContent = "";
+    $("authEmail").value = ""; $("authPassword").value = "";
+    $("authPassword").setAttribute("autocomplete", authMode === "signup" ? "new-password" : "current-password");
   });
 });
 $("authForm").addEventListener("submit", async e=>{
@@ -337,7 +339,7 @@ $("authForm").addEventListener("submit", async e=>{
   const password = $("authPassword").value;
   const { error } = authMode === "signin"
     ? await sb.auth.signInWithPassword({ email, password })
-    : await sb.auth.signUp({ email, password });
+    : await sb.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
   $("authBtn").disabled = false;
   if(error){ $("authErr").textContent = error.message; return; }
   if(authMode === "signup") $("authMsg").textContent = "Account created. Check your email if confirmation is required, or just sign in.";
@@ -352,6 +354,9 @@ sb.auth.onAuthStateChange((_e, session)=>{
     $("authScreen").style.display = "none"; $("appScreen").style.display = "block";
     $("userEmail").textContent = session.user.email;
     $("avatarBtn").textContent = session.user.email[0].toUpperCase();
+    if(window.location.hash.includes("access_token")){
+      history.replaceState(null, "", window.location.pathname);
+    }
     loadData();
   } else {
     $("appScreen").style.display = "none"; $("authScreen").style.display = "block";
