@@ -140,6 +140,10 @@ input:focus,select:focus{outline:none; border-color:var(--border-strong); box-sh
   padding:10px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 6px 20px -6px var(--accent-glow);}
 .btn:disabled{opacity:.55; box-shadow:none;}
 .btn-secondary{background:rgba(255,255,255,.04); color:var(--text); border:1px solid var(--border); border-radius:var(--radius-sm); padding:9px 12px; font-size:13px; cursor:pointer;}
+.chip{display:inline-flex; align-items:center; gap:6px; background:rgba(255,255,255,.05); border:1px solid var(--border); border-radius:20px; padding:5px 10px; font-size:12.5px; color:var(--text);}
+.chip.default{color:var(--muted); border-style:dashed;}
+.chip button{background:none; border:none; color:var(--muted); cursor:pointer; font-size:13px; padding:0; line-height:1;}
+.chip button:hover{color:var(--expense);}
 
 /* filters */
 .filters{display:grid; grid-template-columns:1.4fr 1fr 0.9fr 0.9fr; gap:8px; margin-bottom:14px;}
@@ -175,6 +179,27 @@ input:focus,select:focus{outline:none; border-color:var(--border-strong); box-sh
       <div class="err" id="authErr"></div>
       <div class="msg" id="authMsg"></div>
     </form>
+    <button type="button" class="link-btn" id="forgotBtn" style="display:block; margin:12px auto 0;">Forgot password?</button>
+
+    <form id="resetForm" class="hidden">
+      <p class="sub" style="margin-top:0;">Enter your email and we'll send a reset link.</p>
+      <div style="margin-bottom:10px;"><label>Email</label><input type="email" id="resetEmail" required></div>
+      <button type="submit" class="btn" style="width:100%;" id="resetBtn">Send reset link</button>
+      <button type="button" class="link-btn" id="resetBack" style="display:block; margin:10px auto 0;">Back to sign in</button>
+      <div class="err" id="resetErr"></div>
+      <div class="msg" id="resetMsg"></div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="recoveryOverlay">
+  <div class="modal glass glow-accent">
+    <h3>Set a new password</h3>
+    <form id="recoveryForm">
+      <div style="margin-bottom:10px;"><label>New password</label><input type="password" id="recoveryPassword" autocomplete="new-password" required minlength="6"></div>
+      <button type="submit" class="btn" style="width:100%;" id="recoverySave">Update password</button>
+      <div class="err" id="recoveryErr"></div>
+    </form>
   </div>
 </div>
 
@@ -185,6 +210,7 @@ input:focus,select:focus{outline:none; border-color:var(--border-strong); box-sh
       <div class="avatar" id="avatarBtn">•</div>
       <div class="acct-menu glass hidden" id="acctMenu">
         <div class="email" id="userEmail"></div>
+        <button id="openProfile">Profile</button>
         <button id="openSettings">Currency &amp; export</button>
         <button id="signOutBtn">Sign out</button>
       </div>
@@ -271,6 +297,39 @@ input:focus,select:focus{outline:none; border-color:var(--border-strong); box-sh
   </div>
 </div>
 
+<div class="modal-overlay hidden" id="profileOverlay">
+  <div class="modal glass glow-accent">
+    <h3>Profile</h3>
+    <div style="margin-bottom:10px;"><label>Display name</label><input type="text" id="profileName" placeholder="Your name"></div>
+    <div class="modal-actions" style="margin-bottom:16px;"><button type="button" class="btn" id="saveNameBtn" style="flex:1;">Save name</button></div>
+
+    <div style="margin-bottom:10px;"><label>Email</label><input type="email" id="profileEmail"></div>
+    <div class="modal-actions" style="margin-bottom:6px;"><button type="button" class="btn-secondary" id="saveEmailBtn" style="flex:1;">Update email</button></div>
+    <p class="sub" style="text-align:left; margin:0 0 16px;">Changing email requires confirming it via a link sent to the new address.</p>
+
+    <div style="margin-bottom:10px;"><label>New password</label><input type="password" id="profilePassword" autocomplete="new-password" minlength="6" placeholder="Leave blank to keep current"></div>
+    <div class="modal-actions" style="margin-bottom:6px;"><button type="button" class="btn-secondary" id="savePasswordBtn" style="flex:1;">Update password</button></div>
+
+    <div class="err" id="profileErr"></div>
+    <div class="msg" id="profileMsg"></div>
+    <p class="sub" style="text-align:left; margin:14px 0 0;">Member since <span id="profileSince"></span></p>
+    <div class="modal-actions"><button type="button" class="btn" id="profileClose" style="flex:1;">Done</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="currencyConfirmOverlay">
+  <div class="modal glass glow-accent">
+    <h3>Switch currency?</h3>
+    <p class="sub" style="text-align:left; margin:0 0 16px;" id="currencyConfirmText"></p>
+    <div class="modal-actions" style="flex-direction:column;">
+      <button type="button" class="btn" id="convertYesBtn" style="width:100%; margin-bottom:8px;">Convert my amounts</button>
+      <button type="button" class="btn-secondary" id="convertNoBtn" style="width:100%; margin-bottom:8px;">Just switch, keep values</button>
+      <button type="button" class="link-btn" id="convertCancelBtn">Cancel</button>
+    </div>
+    <div class="err" id="convertErr" style="margin-top:8px;"></div>
+  </div>
+</div>
+
 <div class="modal-overlay hidden" id="settingsOverlay">
   <div class="modal glass glow-accent">
     <h3>Currency &amp; export</h3>
@@ -285,8 +344,20 @@ input:focus,select:focus{outline:none; border-color:var(--border-strong); box-sh
       <option value="AUD">AUD — Australian Dollar</option>
       <option value="CAD">CAD — Canadian Dollar</option>
     </select>
-    <p class="sub" style="text-align:left; margin:0 0 14px;">This only changes how amounts are displayed — it does not convert values.</p>
-    <button type="button" class="btn-secondary" style="width:100%; margin-bottom:8px;" id="exportBtn">Export all entries as CSV</button>
+    <p class="sub" style="text-align:left; margin:0 0 14px;">Changing this will ask whether to convert your existing amounts or just relabel them.</p>
+    <button type="button" class="btn-secondary" style="width:100%; margin-bottom:16px;" id="exportBtn">Export all entries as CSV</button>
+
+    <label>Manage categories</label>
+    <div class="toggle" style="margin-bottom:8px;">
+      <button type="button" data-t="expense" class="active" id="catTypeExpense">Expense</button>
+      <button type="button" data-t="income" id="catTypeIncome">Income</button>
+    </div>
+    <div id="catChips" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
+    <div style="display:flex; gap:6px; margin-bottom:16px;">
+      <input type="text" id="newCatName" placeholder="New category name" style="flex:1;">
+      <button type="button" class="btn-secondary" id="addCatBtn">Add</button>
+    </div>
+
     <div class="modal-actions"><button type="button" class="btn" id="settingsClose" style="flex:1;">Done</button></div>
   </div>
 </div>
@@ -305,8 +376,10 @@ let type = "expense";
 let editType = "expense";
 let data = [];
 let authMode = "signin";
-let currency = localStorage.getItem("ledger_currency") || "USD";
+let currency = "USD";
 let pendingDelete = null;
+let customCats = { expense: [], income: [] };
+let catMgrType = "expense";
 
 function fmt(n){
   try{ return new Intl.NumberFormat(undefined, { style:"currency", currency, minimumFractionDigits:2, maximumFractionDigits:2 }).format(n); }
@@ -349,11 +422,43 @@ document.addEventListener("click", e=>{
   if(!$("acctMenu").contains(e.target) && e.target!==$("avatarBtn")) $("acctMenu").classList.add("hidden");
 });
 $("signOutBtn").addEventListener("click", async ()=>{ await sb.auth.signOut(); });
-sb.auth.onAuthStateChange((_e, session)=>{
+$("forgotBtn").addEventListener("click", ()=>{
+  $("authForm").classList.add("hidden"); $("forgotBtn").classList.add("hidden");
+  $("resetForm").classList.remove("hidden"); $("resetErr").textContent=""; $("resetMsg").textContent="";
+});
+$("resetBack").addEventListener("click", ()=>{
+  $("resetForm").classList.add("hidden"); $("authForm").classList.remove("hidden"); $("forgotBtn").classList.remove("hidden");
+});
+$("resetForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  $("resetErr").textContent = ""; $("resetMsg").textContent = "";
+  $("resetBtn").disabled = true;
+  const email = $("resetEmail").value.trim();
+  const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+  $("resetBtn").disabled = false;
+  if(error){ $("resetErr").textContent = error.message; return; }
+  $("resetMsg").textContent = "Check your email for a reset link.";
+});
+$("recoveryForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  $("recoveryErr").textContent = "";
+  $("recoverySave").disabled = true;
+  const { error } = await sb.auth.updateUser({ password: $("recoveryPassword").value });
+  $("recoverySave").disabled = false;
+  if(error){ $("recoveryErr").textContent = error.message; return; }
+  $("recoveryOverlay").classList.add("hidden");
+  $("recoveryPassword").value = "";
+});
+sb.auth.onAuthStateChange((event, session)=>{
+  if(event === "PASSWORD_RECOVERY"){
+    $("recoveryOverlay").classList.remove("hidden");
+  }
   if(session){
     $("authScreen").style.display = "none"; $("appScreen").style.display = "block";
     $("userEmail").textContent = session.user.email;
     $("avatarBtn").textContent = session.user.email[0].toUpperCase();
+    currency = session.user.user_metadata?.currency || "USD";
+    $("currencySelect").value = currency;
     if(window.location.hash.includes("access_token")){
       history.replaceState(null, "", window.location.pathname);
     }
@@ -366,8 +471,50 @@ sb.auth.onAuthStateChange((_e, session)=>{
 $("currencySelect").value = currency;
 $("openSettings").addEventListener("click", ()=>{ $("acctMenu").classList.add("hidden"); $("settingsOverlay").classList.remove("hidden"); });
 $("settingsClose").addEventListener("click", ()=> $("settingsOverlay").classList.add("hidden"));
+
+let pendingCurrency = null;
 $("currencySelect").addEventListener("change", e=>{
-  currency = e.target.value; localStorage.setItem("ledger_currency", currency); render();
+  const newCur = e.target.value;
+  if(newCur === currency) return;
+  pendingCurrency = newCur;
+  $("currencyConfirmText").textContent = `You're switching from ${currency} to ${newCur}. Convert your existing amounts using today's exchange rate, or just relabel the display currency and keep the numbers as they are?`;
+  $("convertErr").textContent = "";
+  $("currencyConfirmOverlay").classList.remove("hidden");
+});
+function cancelCurrencyChange(){
+  $("currencySelect").value = currency;
+  pendingCurrency = null;
+  $("currencyConfirmOverlay").classList.add("hidden");
+}
+$("convertCancelBtn").addEventListener("click", cancelCurrencyChange);
+$("convertNoBtn").addEventListener("click", async ()=>{
+  currency = pendingCurrency; pendingCurrency = null;
+  $("currencyConfirmOverlay").classList.add("hidden");
+  render();
+  await sb.auth.updateUser({ data: { currency } });
+});
+$("convertYesBtn").addEventListener("click", async ()=>{
+  const oldCur = currency, newCur = pendingCurrency;
+  $("convertErr").textContent = "";
+  $("convertYesBtn").disabled = true; $("convertYesBtn").textContent = "Converting…";
+  try{
+    const res = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${oldCur.toLowerCase()}.json`);
+    if(!res.ok) throw new Error("Rate lookup failed");
+    const json = await res.json();
+    const rate = json[oldCur.toLowerCase()]?.[newCur.toLowerCase()];
+    if(!rate) throw new Error("No rate available for that currency pair");
+    await Promise.all(data.map(t=>{
+      const newAmount = Math.round(Number(t.amount) * rate * 100) / 100;
+      return sb.from("transactions").update({ amount: newAmount }).eq("id", t.id);
+    }));
+    currency = newCur; pendingCurrency = null;
+    await sb.auth.updateUser({ data: { currency } });
+    $("currencyConfirmOverlay").classList.add("hidden");
+    await loadData();
+  }catch(err){
+    $("convertErr").textContent = "Couldn't fetch a live rate right now — try again, or choose \"Just switch\" instead.";
+  }
+  $("convertYesBtn").disabled = false; $("convertYesBtn").textContent = "Convert my amounts";
 });
 $("exportBtn").addEventListener("click", ()=>{
   const header = "date,type,category,amount,note\n";
@@ -376,6 +523,39 @@ $("exportBtn").addEventListener("click", ()=>{
   const blob = new Blob([header+rows], {type:"text/csv"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = "ledger-export.csv"; a.click();
+});
+
+$("openProfile").addEventListener("click", async ()=>{
+  $("acctMenu").classList.add("hidden");
+  $("profileErr").textContent = ""; $("profileMsg").textContent = ""; $("profilePassword").value = "";
+  const { data:{ user } } = await sb.auth.getUser();
+  $("profileName").value = user.user_metadata?.full_name || "";
+  $("profileEmail").value = user.email;
+  $("profileSince").textContent = new Date(user.created_at).toLocaleDateString(undefined,{year:'numeric',month:'long',day:'numeric'});
+  $("profileOverlay").classList.remove("hidden");
+});
+$("profileClose").addEventListener("click", ()=> $("profileOverlay").classList.add("hidden"));
+$("saveNameBtn").addEventListener("click", async ()=>{
+  $("profileErr").textContent = ""; $("profileMsg").textContent = "";
+  const { error } = await sb.auth.updateUser({ data: { full_name: $("profileName").value.trim() } });
+  if(error){ $("profileErr").textContent = error.message; return; }
+  $("profileMsg").textContent = "Name saved.";
+});
+$("saveEmailBtn").addEventListener("click", async ()=>{
+  $("profileErr").textContent = ""; $("profileMsg").textContent = "";
+  const newEmail = $("profileEmail").value.trim();
+  const { error } = await sb.auth.updateUser({ email: newEmail }, { emailRedirectTo: window.location.origin });
+  if(error){ $("profileErr").textContent = error.message; return; }
+  $("profileMsg").textContent = "Check your new email to confirm the change.";
+});
+$("savePasswordBtn").addEventListener("click", async ()=>{
+  $("profileErr").textContent = ""; $("profileMsg").textContent = "";
+  const pw = $("profilePassword").value;
+  if(!pw){ $("profileErr").textContent = "Enter a new password first."; return; }
+  const { error } = await sb.auth.updateUser({ password: pw });
+  if(error){ $("profileErr").textContent = error.message; return; }
+  $("profilePassword").value = "";
+  $("profileMsg").textContent = "Password updated.";
 });
 
 function showView(name){
@@ -387,8 +567,17 @@ document.querySelectorAll(".tabs button").forEach(b=> b.addEventListener("click"
 $("viewAllBtn").addEventListener("click", ()=> showView("history"));
 
 $("date").value = new Date().toISOString().slice(0,10);
-function fillCats(sel, t){ sel.innerHTML=""; (t==="expense"?EXP_CATS:INC_CATS).forEach(c=>{
-  const o=document.createElement("option"); o.value=c; o.textContent=c; sel.appendChild(o); }); }
+function fillCats(sel, t){
+  const current = sel.value;
+  sel.innerHTML="";
+  const all = [...(t==="expense"?EXP_CATS:INC_CATS), ...customCats[t]];
+  all.forEach(c=>{ const o=document.createElement("option"); o.value=c; o.textContent=c; sel.appendChild(o); });
+  if(current && all.includes(current)) sel.value = current;
+}
+function refreshAllCategorySelects(){
+  fillCats($("category"), type);
+  fillCats($("editCategory"), editType);
+}
 fillCats($("category"), type);
 document.querySelectorAll('#form .toggle button').forEach(btn=>{
   btn.addEventListener("click", ()=>{
@@ -471,9 +660,56 @@ async function finalizePendingDelete(){
 async function loadData(){
   const { data: rows, error } = await sb.from("transactions").select("*").order("date",{ascending:false}).limit(500);
   if(!error) data = rows || [];
+  const { data: catRows } = await sb.from("categories").select("*").order("name");
+  customCats = { expense: [], income: [] };
+  (catRows||[]).forEach(c=>{ customCats[c.type] = customCats[c.type] || []; customCats[c.type].push(c.name); });
+  refreshAllCategorySelects();
+  renderCatChips();
   populateCategoryFilter();
   render();
 }
+
+function renderCatChips(){
+  const holder = $("catChips"); holder.innerHTML = "";
+  const defaults = catMgrType === "expense" ? EXP_CATS : INC_CATS;
+  defaults.forEach(name=>{
+    const chip = document.createElement("span"); chip.className = "chip default";
+    chip.textContent = name; holder.appendChild(chip);
+  });
+  (customCats[catMgrType]||[]).forEach(name=>{
+    const chip = document.createElement("span"); chip.className = "chip";
+    chip.innerHTML = `${name} <button data-name="${name}" title="Remove">✕</button>`;
+    holder.appendChild(chip);
+  });
+  holder.querySelectorAll("button[data-name]").forEach(b=>{
+    b.addEventListener("click", ()=> removeCategory(catMgrType, b.dataset.name));
+  });
+}
+document.querySelectorAll("#catTypeExpense, #catTypeIncome").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    document.querySelectorAll("#catTypeExpense, #catTypeIncome").forEach(b=>b.classList.remove("active"));
+    btn.classList.add("active"); catMgrType = btn.dataset.t; renderCatChips();
+  });
+});
+$("addCatBtn").addEventListener("click", async ()=>{
+  const name = $("newCatName").value.trim();
+  if(!name) return;
+  const { data:{ user } } = await sb.auth.getUser();
+  const { error } = await sb.from("categories").insert({ user_id: user.id, type: catMgrType, name });
+  if(!error){
+    $("newCatName").value = "";
+    customCats[catMgrType] = customCats[catMgrType] || [];
+    if(!customCats[catMgrType].includes(name)) customCats[catMgrType].push(name);
+    renderCatChips(); refreshAllCategorySelects(); populateCategoryFilter();
+  }
+});
+async function removeCategory(t, name){
+  const { data:{ user } } = await sb.auth.getUser();
+  await sb.from("categories").delete().match({ user_id: user.id, type: t, name });
+  customCats[t] = (customCats[t]||[]).filter(n=> n!==name);
+  renderCatChips(); refreshAllCategorySelects(); populateCategoryFilter();
+}
+
 function populateCategoryFilter(){
   const sel = $("fCategory"); const current = sel.value;
   const cats = [...new Set(data.map(t=>t.category))].sort();
