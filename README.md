@@ -2,7 +2,7 @@
 
 ## 1. Set up the database
 1. Go to your Supabase project → **SQL Editor** → New query.
-2. Paste the contents of `schema.sql` and click **Run**.
+2. Paste the contents of `schema.sql` and click **Run**. It creates everything the app needs (transactions, custom categories, and the currency-conversion function) and is safe to re-run after updates: it never deletes or duplicates data.
 3. In **Authentication → Providers**, Email is enabled by default — that's all you need.
 4. In **Authentication → Settings**, you can turn OFF "Confirm email" while testing, so sign-up works instantly without checking an inbox. Turn it back on before sharing publicly.
 
@@ -31,3 +31,9 @@ In the Pages project → **Custom domains** → add the domain you bought, and f
 ## Notes
 - The Supabase URL and publishable key in `index.html` are safe to expose publicly — they're meant to be used client-side. Access to data is protected by the Row Level Security policies in `schema.sql`, not by hiding the key.
 - Each signed-up user only ever sees their own transactions, enforced by the database itself.
+
+## Before sharing widely: email delivery
+Supabase's built-in email sender is heavily rate-limited (roughly one email per address per minute, plus a low hourly cap for the whole project). For real users, add a custom SMTP provider under **Authentication -> Emails -> SMTP Settings** (Resend, Brevo and similar services have free tiers).
+
+## Backups
+The free Supabase tier does not include automatic backups. Users can export their own data from **Profile menu -> Currency & export -> Export CSV**. For your own peace of mind, consider a paid plan with backups once people depend on the app.
