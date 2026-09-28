@@ -394,10 +394,33 @@ function niceMax(v){
 }
 function fmtShort(n){ return n>=1000 ? Math.round(n/1000)+"k" : Math.round(n).toString(); }
 
+const cooldownTimers = new WeakMap();
+function clearCooldown(btn, label){
+  clearInterval(cooldownTimers.get(btn)); cooldownTimers.delete(btn);
+  btn.disabled = false; if(label) btn.textContent = label;
+}
+function startCooldown(btn, label, seconds){
+  clearCooldown(btn);
+  let left = seconds; btn.disabled = true;
+  const tick = ()=>{
+    if(left <= 0){ clearCooldown(btn, label); return; }
+    btn.textContent = `${label} (${left}s)`; left--;
+  };
+  cooldownTimers.set(btn, setInterval(tick, 1000)); tick();
+}
+function friendlyAuthError(error){
+  const m = error.message || "";
+  const secs = parseInt((m.match(/after (\d+) seconds?/i)||[])[1], 10);
+  if(secs) return { text:`We just sent an email — please wait ${secs} seconds before trying again.`, cooldown:secs };
+  if(error.status === 429 || /rate limit/i.test(m)) return { text:"Too many emails have been sent recently. Please wait a few minutes and try again.", cooldown:60 };
+  return { text:m, cooldown:0 };
+}
+
 document.querySelectorAll(".auth-tabs button").forEach(b=>{
   b.addEventListener("click", ()=>{
     document.querySelectorAll(".auth-tabs button").forEach(x=>x.classList.remove("active"));
     b.classList.add("active"); authMode = b.dataset.mode;
+    clearCooldown($("authBtn"));
     $("authBtn").textContent = authMode === "signin" ? "Sign in" : "Sign up";
     $("authErr").textContent = ""; $("authMsg").textContent = "";
     $("authEmail").value = ""; $("authPassword").value = "";
@@ -413,9 +436,18 @@ $("authForm").addEventListener("submit", async e=>{
   const { error } = authMode === "signin"
     ? await sb.auth.signInWithPassword({ email, password })
     : await sb.auth.signUp({ email, password, options: { emailRedirectTo: window.location.origin } });
-  $("authBtn").disabled = false;
-  if(error){ $("authErr").textContent = error.message; return; }
-  if(authMode === "signup") $("authMsg").textContent = "Account created. Check your email if confirmation is required, or just sign in.";
+  const label = authMode === "signin" ? "Sign in" : "Sign up";
+  if(error){
+    const f = friendlyAuthError(error);
+    $("authErr").textContent = f.text;
+    if(f.cooldown && authMode === "signup") startCooldown($("authBtn"), label, f.cooldown);
+    else clearCooldown($("authBtn"), label);
+    return;
+  }
+  if(authMode === "signup"){
+    $("authMsg").textContent = "Account created. Check your email (and spam folder) for the confirmation link.";
+    startCooldown($("authBtn"), label, 60);
+  } else clearCooldown($("authBtn"), label);
 });
 $("avatarBtn").addEventListener("click", ()=> $("acctMenu").classList.toggle("hidden"));
 document.addEventListener("click", e=>{
@@ -435,9 +467,15 @@ $("resetForm").addEventListener("submit", async e=>{
   $("resetBtn").disabled = true;
   const email = $("resetEmail").value.trim();
   const { error } = await sb.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
-  $("resetBtn").disabled = false;
-  if(error){ $("resetErr").textContent = error.message; return; }
-  $("resetMsg").textContent = "Check your email for a reset link.";
+  if(error){
+    const f = friendlyAuthError(error);
+    $("resetErr").textContent = f.text;
+    if(f.cooldown) startCooldown($("resetBtn"), "Send reset link", f.cooldown);
+    else clearCooldown($("resetBtn"), "Send reset link");
+    return;
+  }
+  $("resetMsg").textContent = "If that email has an account, a reset link is on its way. Check your spam folder too.";
+  startCooldown($("resetBtn"), "Send reset link", 60);
 });
 $("recoveryForm").addEventListener("submit", async e=>{
   e.preventDefault();
@@ -472,6 +510,23 @@ $("currencySelect").value = currency;
 $("openSettings").addEventListener("click", ()=>{ $("acctMenu").classList.add("hidden"); $("settingsOverlay").classList.remove("hidden"); });
 $("settingsClose").addEventListener("click", ()=> $("settingsOverlay").classList.add("hidden"));
 
+async function fetchRate(from, to){
+  const f = from.toLowerCase(), t = to.toLowerCase();
+  const sources = [
+    `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${f}.json`,
+    `https://latest.currency-api.pages.dev/v1/currencies/${f}.json`
+  ];
+  for(const url of sources){
+    try{
+      const res = await fetch(url);
+      if(!res.ok) continue;
+      const rate = (await res.json())[f]?.[t];
+      if(typeof rate === "number" && isFinite(rate) && rate > 0) return rate;
+    }catch(e){ /* try the next source */ }
+  }
+  return null;
+}
+
 let pendingCurrency = null;
 $("currencySelect").addEventListener("change", e=>{
   const newCur = e.target.value;
@@ -498,21 +553,19 @@ $("convertYesBtn").addEventListener("click", async ()=>{
   $("convertErr").textContent = "";
   $("convertYesBtn").disabled = true; $("convertYesBtn").textContent = "Converting…";
   try{
-    const res = await fetch(`https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${oldCur.toLowerCase()}.json`);
-    if(!res.ok) throw new Error("Rate lookup failed");
-    const json = await res.json();
-    const rate = json[oldCur.toLowerCase()]?.[newCur.toLowerCase()];
-    if(!rate) throw new Error("No rate available for that currency pair");
-    await Promise.all(data.map(t=>{
-      const newAmount = Math.round(Number(t.amount) * rate * 100) / 100;
-      return sb.from("transactions").update({ amount: newAmount }).eq("id", t.id);
-    }));
+    const rate = await fetchRate(oldCur, newCur);
+    if(!rate) throw new Error("rate");
+    // One atomic database call: converts every amount and saves the new currency together.
+    const { error } = await sb.rpc("convert_currency", { rate, new_currency: newCur });
+    if(error) throw new Error("db");
+    await sb.auth.refreshSession();
     currency = newCur; pendingCurrency = null;
-    await sb.auth.updateUser({ data: { currency } });
     $("currencyConfirmOverlay").classList.add("hidden");
     await loadData();
   }catch(err){
-    $("convertErr").textContent = "Couldn't fetch a live rate right now — try again, or choose \"Just switch\" instead.";
+    $("convertErr").textContent = err.message === "db"
+      ? "The conversion couldn't be saved, so nothing was changed. Please try again."
+      : "Couldn't fetch a live exchange rate right now — try again, or choose \"Just switch\" instead.";
   }
   $("convertYesBtn").disabled = false; $("convertYesBtn").textContent = "Convert my amounts";
 });
@@ -657,9 +710,22 @@ async function finalizePendingDelete(){
   await sb.from("transactions").delete().eq("id", entry.id);
 }
 
+async function fetchAllTransactions(){
+  const PAGE = 1000; let from = 0; let all = [];
+  while(true){
+    const { data: rows, error } = await sb.from("transactions").select("*")
+      .order("date",{ascending:false}).order("created_at",{ascending:false}).order("id")
+      .range(from, from+PAGE-1);
+    if(error) return null;
+    all = all.concat(rows || []);
+    if(!rows || rows.length < PAGE) break;
+    from += PAGE;
+  }
+  return all;
+}
 async function loadData(){
-  const { data: rows, error } = await sb.from("transactions").select("*").order("date",{ascending:false}).limit(500);
-  if(!error) data = rows || [];
+  const rows = await fetchAllTransactions();
+  if(rows) data = rows;
   const { data: catRows } = await sb.from("categories").select("*").order("name");
   customCats = { expense: [], income: [] };
   (catRows||[]).forEach(c=>{ customCats[c.type] = customCats[c.type] || []; customCats[c.type].push(c.name); });
