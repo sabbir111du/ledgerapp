@@ -161,6 +161,36 @@ input:focus,select:focus{outline:none; box-shadow:0 0 0 3px var(--tint);}
   .tx-list .tx.glass:hover{background:var(--fill);}
   .filters{grid-template-columns:2fr 1.2fr 1fr 1fr;}
 }
+
+/* large screens: sidebar, two columns, table */
+.dash-cols,.col-a,.col-b{display:contents;}
+#quickAdd{display:none;}
+.kbd-hint{display:none; margin-top:20px; padding:0 12px; font-size:13px; color:var(--muted); line-height:2;}
+kbd{font:inherit; font-size:12px; background:var(--fill); border-radius:5px; padding:1px 7px;}
+.tx-table{width:100%; border-collapse:collapse; font-size:15px;}
+.tx-table th{text-align:left; font-size:13px; font-weight:600; color:var(--muted); padding:12px 16px; border-bottom:.5px solid var(--sep); cursor:pointer; user-select:none; white-space:nowrap;}
+.tx-table th:hover{color:var(--text);}
+.tx-table th.r,.tx-table td.r{text-align:right;}
+.tx-table td{padding:12px 16px; border-bottom:.5px solid var(--sep);}
+.tx-table td.note{color:var(--muted); max-width:280px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.tx-table td.r{font-weight:600; white-space:nowrap;}
+.tx-table td.acts{text-align:right; white-space:nowrap; width:1%;}
+.tx-table tbody tr:last-child td{border-bottom:none;}
+.tx-table tbody tr:hover{background:var(--fill);}
+@media (hover:hover){ .tx-table .acts{opacity:0;} .tx-table tr:hover .acts,.tx-table tr:focus-within .acts{opacity:1;} }
+@media (min-width:1000px){
+  :root{--side:220px;}
+  #appScreen.wrap{max-width:1240px; padding:32px 32px 64px calc(var(--side) + 64px);}
+  #appScreen>header{position:fixed; top:32px; left:max(32px,calc(50vw - 620px + 32px)); width:var(--side); margin:0; z-index:30;}
+  #appScreen>.tabs{position:fixed; top:104px; left:max(32px,calc(50vw - 620px + 32px)); width:var(--side); flex-direction:column; background:none; padding:0; gap:2px; margin:0;}
+  .tabs button{text-align:left; padding:10px 12px; border-radius:10px; font-size:15px;}
+  .tabs button.active{background:var(--tint); color:var(--blue); box-shadow:none;}
+  .dash-cols{display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); gap:0 28px; align-items:start;}
+  .col-a,.col-b{display:block; min-width:0;}
+  #quickAdd{display:block;}
+  #quickAdd form.entry-form{grid-template-columns:1fr 1fr;}
+}
+@media (min-width:1000px) and (hover:hover) and (pointer:fine){ .kbd-hint{display:block;} }
 @media (prefers-reduced-motion:reduce){ *{animation:none !important; transition:none !important;} }
 </style>
 </head>
@@ -223,6 +253,7 @@ input:focus,select:focus{outline:none; box-shadow:0 0 0 3px var(--tint);}
     <button data-view="dash" class="active">Dashboard</button>
     <button data-view="add">Add entry</button>
     <button data-view="history">History</button>
+    <div class="kbd-hint">Press <kbd>N</kbd> to add an entry<br>Press <kbd>/</kbd> to search</div>
   </div>
 
   <div class="view active" id="view-dash">
@@ -232,6 +263,7 @@ input:focus,select:focus{outline:none; box-shadow:0 0 0 3px var(--tint);}
       <div class="card glass glow-out expense"><div class="eyebrow">Expenses</div><div class="value num" id="sumExpense">—</div></div>
     </div>
 
+    <div class="dash-cols"><div class="col-a">
     <section id="chartSection" class="hidden">
       <div class="sec-head"><h2>Last 6 months</h2></div>
       <div class="chart-box glass">
@@ -248,10 +280,14 @@ input:focus,select:focus{outline:none; box-shadow:0 0 0 3px var(--tint);}
       <div id="bars"></div>
     </section>
 
+    </div><div class="col-b">
+    <section id="quickAdd"><div class="sec-head"><h2>Add entry</h2></div></section>
+
     <section>
       <div class="sec-head"><h2>Recent entries</h2><button class="link-btn" id="viewAllBtn">View all →</button></div>
       <div class="tx-list" id="recentList"></div>
     </section>
+    </div></div>
   </div>
 
   <div class="view" id="view-add">
@@ -613,7 +649,9 @@ $("savePasswordBtn").addEventListener("click", async ()=>{
   $("profileMsg").textContent = "Password updated.";
 });
 
+const wideMQ = window.matchMedia("(min-width:1000px)");
 function showView(name){
+  if(name==="add" && wideMQ.matches){ name="dash"; setTimeout(()=>$("amount").focus(),0); }
   document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active", x.dataset.view===name));
   document.querySelectorAll(".view").forEach(x=>x.classList.remove("active"));
   $("view-"+name).classList.add("active");
@@ -650,7 +688,7 @@ $("form").addEventListener("submit", async e=>{
     user_id: user.id, type, amount, category: $("category").value, date: $("date").value, note: $("note").value.trim()
   });
   $("addBtn").disabled = false;
-  if(!error){ $("amount").value=""; $("note").value=""; await loadData(); showView("dash"); }
+  if(!error){ $("amount").value=""; $("note").value=""; await loadData(); showView("dash"); if(wideMQ.matches) $("amount").focus(); }
 });
 
 fillCats($("editCategory"), "expense");
@@ -826,6 +864,7 @@ function renderHistory(){
   const list = $("historyList"); list.innerHTML = "";
   const rows = filteredData();
   if(rows.length===0){ list.innerHTML = '<div class="empty">No entries match your filters.</div>'; return; }
+  if(wideMQ.matches){ renderHistoryTable(list, rows); return; }
   rows.forEach(t=> list.appendChild(txRow(t)));
   wireRowActions(list);
 }
@@ -896,6 +935,49 @@ function render(){
 
   renderHistory();
 }
+
+/* ---- large-screen behaviour ---- */
+let sortKey = "date", sortDir = -1;
+function renderHistoryTable(list, rows){
+  const cols = [["date","Date"],["category","Category"],["note","Note"],["amount","Amount"]];
+  const val = (t,k)=> k==="amount" ? Number(t.amount)*(t.type==="income"?1:-1) : String(t[k]||"").toLowerCase();
+  rows = [...rows].sort((a,b)=>{ const x=val(a,sortKey), y=val(b,sortKey); return (x<y?-1:x>y?1:0)*sortDir; });
+  const tbl = document.createElement("table"); tbl.className = "tx-table";
+  tbl.innerHTML = "<thead><tr>" + cols.map(([k,l])=>`<th data-k="${k}" class="${k==="amount"?"r":""}">${l}${sortKey===k?(sortDir>0?" ↑":" ↓"):""}</th>`).join("") + "<th></th></tr></thead>";
+  const tb = document.createElement("tbody");
+  rows.forEach(t=>{
+    const tr = document.createElement("tr"), inc = t.type==="income";
+    tr.innerHTML = `<td class="num">${t.date}</td><td>${escapeHtml(t.category)}</td><td class="note">${escapeHtml(t.note||"")}</td>
+      <td class="r num" style="color:${inc?'var(--income)':'var(--expense)'}">${inc?'+':'−'}${fmt(Math.abs(Number(t.amount)))}</td>
+      <td class="acts"><button class="icon-btn edit-btn" data-id="${t.id}" title="Edit">✎</button><button class="icon-btn danger del-btn" data-id="${t.id}" title="Delete">🗑</button></td>`;
+    tb.appendChild(tr);
+  });
+  tbl.appendChild(tb); list.appendChild(tbl);
+  tbl.querySelectorAll("th[data-k]").forEach(th=> th.addEventListener("click", ()=>{
+    const k = th.dataset.k;
+    if(sortKey===k) sortDir *= -1; else { sortKey = k; sortDir = (k==="date"||k==="amount") ? -1 : 1; }
+    renderHistory();
+  }));
+  wireRowActions(list);
+}
+function placeForm(){ (wideMQ.matches ? $("quickAdd") : $("view-add")).appendChild($("form")); }
+wideMQ.addEventListener("change", ()=>{ placeForm(); renderHistory(); });
+placeForm();
+
+document.addEventListener("keydown", e=>{
+  if(e.metaKey || e.ctrlKey || e.altKey) return;
+  if(e.key === "Escape"){
+    if(!$("currencyConfirmOverlay").classList.contains("hidden")) cancelCurrencyChange();
+    document.querySelectorAll(".modal-overlay").forEach(o=>{ if(o.id!=="recoveryOverlay") o.classList.add("hidden"); });
+    $("acctMenu").classList.add("hidden");
+    return;
+  }
+  const tag = (e.target.tagName||"").toLowerCase();
+  if(["input","textarea","select"].includes(tag) || $("appScreen").style.display==="none") return;
+  if(document.querySelector(".modal-overlay:not(.hidden)")) return;
+  if(e.key==="n" || e.key==="N"){ e.preventDefault(); showView("add"); setTimeout(()=>$("amount").focus(),0); }
+  else if(e.key==="/"){ e.preventDefault(); showView("history"); setTimeout(()=>$("fSearch").focus(),0); }
+});
 </script>
 </body>
 </html>
