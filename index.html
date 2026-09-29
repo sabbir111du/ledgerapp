@@ -413,12 +413,14 @@ const INC_CATS = ["Salary","Freelance","Gift","Interest","Other"];
 let type = "expense";
 let editType = "expense";
 let data = [];
+let activeUserId = null;
 let authMode = "signin";
 let currency = "USD";
 let pendingDelete = null;
 let customCats = { expense: [], income: [] };
 let catMgrType = "expense";
 
+function localDateKey(d=new Date()){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`; }
 function fmt(n){
   try{ return new Intl.NumberFormat(undefined, { style:"currency", currency, minimumFractionDigits:2, maximumFractionDigits:2 }).format(n); }
   catch(e){ return (n<0?"-":"") + currency + " " + Math.abs(n).toFixed(2); }
@@ -530,6 +532,9 @@ sb.auth.onAuthStateChange((event, session)=>{
     $("recoveryOverlay").classList.remove("hidden");
   }
   if(session){
+    if(activeUserId !== session.user.id){
+      activeUserId = session.user.id; data = []; customCats = { expense: [], income: [] }; render();
+    }
     $("authScreen").style.display = "none"; $("appScreen").style.display = "block";
     $("userEmail").textContent = session.user.email;
     $("avatarBtn").textContent = session.user.email[0].toUpperCase();
@@ -540,6 +545,7 @@ sb.auth.onAuthStateChange((event, session)=>{
     }
     loadData();
   } else {
+    activeUserId = null; data = []; customCats = { expense: [], income: [] }; render();
     $("appScreen").style.display = "none"; $("authScreen").style.display = "block";
   }
 });
@@ -608,9 +614,15 @@ $("convertYesBtn").addEventListener("click", async ()=>{
   $("convertYesBtn").disabled = false; $("convertYesBtn").textContent = "Convert my amounts";
 });
 $("exportBtn").addEventListener("click", ()=>{
-  const header = "date,type,category,amount,note\n";
-  const rows = data.map(t=> [t.date, t.type, t.category, t.amount, (t.note||"").replace(/"/g,'""')]
-    .map(v=> /[",\n]/.test(String(v)) ? `"${v}"` : v).join(",")).join("\n");
+  const columns = ["date","type","category","amount","note"];
+  const csvCell = value => {
+    let text = String(value ?? "");
+    if (/^[\s\u0000-\u001f]*[=+@-]/.test(text)) text = "'" + text;
+    return `"${text.replace(/"/g, '""')}"`;
+  };
+  const header = columns.map(csvCell).join(",") + "\r\n";
+  const rows = data.map(t=> [t.date, t.type, t.category, t.amount, t.note||""]
+    .map(csvCell).join(",")).join("\r\n");
   const blob = new Blob([header+rows], {type:"text/csv"});
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob); a.download = "ledger-export.csv"; a.click();
@@ -659,7 +671,7 @@ function showView(name){
 document.querySelectorAll(".tabs button").forEach(b=> b.addEventListener("click", ()=> showView(b.dataset.view)));
 $("viewAllBtn").addEventListener("click", ()=> showView("history"));
 
-$("date").value = new Date().toISOString().slice(0,10);
+$("date").value = localDateKey();
 function fillCats(sel, t){
   const current = sel.value;
   sel.innerHTML="";
@@ -764,9 +776,13 @@ async function fetchAllTransactions(){
   return all;
 }
 async function loadData(){
+  const expectedUserId = activeUserId;
+  if(!expectedUserId) return;
   const rows = await fetchAllTransactions();
-  if(rows) data = rows;
-  const { data: catRows } = await sb.from("categories").select("*").order("name");
+  if(!rows || expectedUserId !== activeUserId) return;
+  data = rows;
+  const { data: catRows, error } = await sb.from("categories").select("*").order("name");
+  if(error || expectedUserId !== activeUserId) return;
   customCats = { expense: [], income: [] };
   (catRows||[]).forEach(c=>{ customCats[c.type] = customCats[c.type] || []; customCats[c.type].push(c.name); });
   refreshAllCategorySelects();
@@ -784,8 +800,9 @@ function renderCatChips(){
   });
   (customCats[catMgrType]||[]).forEach(name=>{
     const chip = document.createElement("span"); chip.className = "chip";
-    chip.innerHTML = `${name} <button data-name="${name}" title="Remove">✕</button>`;
-    holder.appendChild(chip);
+    chip.append(document.createTextNode(name + " "));
+    const button = document.createElement("button"); button.dataset.name = name; button.title = "Remove"; button.textContent = "✕";
+    chip.appendChild(button); holder.appendChild(chip);
   });
   holder.querySelectorAll("button[data-name]").forEach(b=>{
     b.addEventListener("click", ()=> removeCategory(catMgrType, b.dataset.name));
@@ -819,7 +836,7 @@ async function removeCategory(t, name){
 function populateCategoryFilter(){
   const sel = $("fCategory"); const current = sel.value;
   const cats = [...new Set(data.map(t=>t.category))].sort();
-  sel.innerHTML = '<option value="">All categories</option>' + cats.map(c=>`<option value="${c}">${c}</option>`).join("");
+  sel.innerHTML = '<option value="">All categories</option>' + cats.map(c=>`<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
   sel.value = current;
 }
 ["fSearch","fCategory","fFrom","fTo"].forEach(id=> $(id).addEventListener("input", renderHistory));
@@ -835,12 +852,12 @@ function filteredData(){
     return true;
   });
 }
-function escapeHtml(s){ return s.replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeHtml(s){ return String(s ?? "").replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function txRow(t, showActions=true){
   const row = document.createElement("div"); row.className = "tx glass";
   row.innerHTML = `
     <div class="tx-left">
-      <div class="tx-cat">${t.category}${t.note ? " · "+escapeHtml(t.note) : ""}</div>
+      <div class="tx-cat">${escapeHtml(t.category)}${t.note ? " · "+escapeHtml(t.note) : ""}</div>
       <div class="tx-meta">${t.date}</div>
     </div>
     <div class="tx-amt num" style="color:${t.type==='income'?'var(--income)':'var(--expense)'}; text-shadow:0 0 10px ${t.type==='income'?'var(--income-glow)':'var(--expense-glow)'}">
@@ -877,7 +894,7 @@ function render(){
   $("sumExpense").textContent = fmt(outTotal);
 
   const now = new Date();
-  const monthKey = now.toISOString().slice(0,7);
+  const monthKey = localDateKey(now).slice(0,7);
   const byCat = {};
   data.filter(t=>t.type==="expense" && t.date.slice(0,7)===monthKey)
       .forEach(t=>{ byCat[t.category] = (byCat[t.category]||0) + Number(t.amount); });
@@ -888,7 +905,7 @@ function render(){
   if(sortedCat.length===0){ barsEl.innerHTML = '<div class="empty">No expenses logged this month yet.</div>'; }
   else sortedCat.forEach(([cat,amt])=>{
     const row = document.createElement("div"); row.className="bar-row";
-    row.innerHTML = `<div class="name">${cat}</div>
+    row.innerHTML = `<div class="name">${escapeHtml(cat)}</div>
       <div class="bar-track"><div class="bar-fill" style="width:${(amt/maxCat*100).toFixed(0)}%"></div></div>
       <div class="bar-pct">${Math.round(amt/totalCat*100)}%</div>
       <div class="bar-amt num">${fmt(amt)}</div>`;
@@ -898,7 +915,7 @@ function render(){
   const months = [];
   for(let i=5;i>=0;i--){
     const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
-    months.push({key:d.toISOString().slice(0,7), label:d.toLocaleDateString(undefined,{month:'short'}), inc:0, exp:0});
+    months.push({key:localDateKey(d).slice(0,7), label:d.toLocaleDateString(undefined,{month:'short'}), inc:0, exp:0});
   }
   data.forEach(t=>{
     const m = months.find(x=>x.key===t.date.slice(0,7));
