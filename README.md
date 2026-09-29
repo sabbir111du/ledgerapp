@@ -2,7 +2,7 @@
 
 ## 1. Set up the database
 1. Go to your Supabase project → **SQL Editor** → New query.
-2. Paste the contents of `schema.sql` and click **Run**. It creates everything the app needs (transactions, custom categories, and the currency-conversion function) and is safe to re-run after updates: it never deletes or duplicates data.
+2. Paste the contents of `schema.sql` and click **Run**. It creates the transactions and custom-categories tables, applies per-user Row Level Security policies, and installs the currency-conversion function. It is safe to rerun: policies are replaced and existing transaction rows are preserved.
 3. In **Authentication → Providers**, Email is enabled by default — that's all you need.
 4. In **Authentication → Settings**, you can turn OFF "Confirm email" while testing, so sign-up works instantly without checking an inbox. Turn it back on before sharing publicly.
 
