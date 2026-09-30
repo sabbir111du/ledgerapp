@@ -1,0 +1,11 @@
+{
+  "name": "ledgerapp",
+  "compatibility_date": "2026-09-30",
+  "observability": {
+    "enabled": true
+  },
+  "assets": {
+    "directory": "."
+  },
+  "previews": {}
+}
