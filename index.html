@@ -1,361 +1,222 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1, viewport-fit=cover"
-    />
-    <title>Ledger</title>
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-title" content="Ledger" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-    <meta name="theme-color" content="#f7f9fc" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <title>
+      Ledger
+    </title>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Ledger">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="theme-color" content="#f7f9fc">
     <script src="theme.js"></script>
-    <link
-      rel="icon"
-      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23007aff'/%3E%3Cpath d='M22 15v28h21' fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
-    />
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <meta name="color-scheme" content="light dark" />
-    <link rel="stylesheet" href="styles.css" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23007aff'/%3E%3Cpath d='M22 15v28h21' fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="styles.css">
   </head>
   <body>
-    <div class="wrap" id="authScreen" style="display: none">
+    <div class="wrap" id="authScreen" style="display:none;">
       <div class="auth-box glass glow-accent">
         <h1>
-          <span class="brand-mark" aria-hidden="true"> L </span>
+          <span class="brand-mark" aria-hidden="true">
+            L
+          </span>
           Ledger
         </h1>
-        <p class="sub">Sign in to track your income &amp; expenses.</p>
+        <p class="sub">
+          Sign in to track your income &amp; expenses.
+        </p>
         <div class="auth-tabs">
-          <button data-mode="signin" class="active">Sign in</button>
-          <button data-mode="signup">Sign up</button>
-        </div>
-        <form id="authForm">
-          <div style="margin-bottom: 10px">
-            <label for="authEmail"> Email </label>
-            <input type="email" id="authEmail" autocomplete="email" required />
-          </div>
-          <div style="margin-bottom: 10px">
-            <label for="authPassword"> Password </label>
-            <input
-              type="password"
-              id="authPassword"
-              autocomplete="current-password"
-              required
-              minlength="6"
-            />
-          </div>
-          <button type="submit" class="btn" style="width: 100%" id="authBtn">
+          <button data-mode="signin" class="active">
             Sign in
           </button>
-          <div class="err" id="authErr"></div>
-          <div class="msg" id="authMsg"></div>
+          <button data-mode="signup">
+            Sign up
+          </button>
+        </div>
+        <form id="authForm">
+          <div style="margin-bottom:10px;">
+            <label for="authEmail">
+              Email
+            </label>
+            <input type="email" id="authEmail" autocomplete="email" required>
+          </div>
+          <div style="margin-bottom:10px;">
+            <label for="authPassword">
+              Password
+            </label>
+            <input type="password" id="authPassword" autocomplete="current-password" required minlength="6">
+          </div>
+          <button type="submit" class="btn" style="width:100%;" id="authBtn">
+            Sign in
+          </button>
+          <div class="err" id="authErr">
+          </div>
+          <div class="msg" id="authMsg">
+          </div>
         </form>
-        <button
-          type="button"
-          class="link-btn"
-          id="forgotBtn"
-          style="display: block; margin: 12px auto 0"
-        >
+        <button type="button" class="link-btn" id="forgotBtn" style="display:block; margin:12px auto 0;">
           Forgot password?
         </button>
         <form id="resetForm" class="hidden">
-          <p class="sub" style="margin-top: 0">
+          <p class="sub" style="margin-top:0;">
             Enter your email and we'll send a reset link.
           </p>
-          <div style="margin-bottom: 10px">
-            <label for="resetEmail"> Email </label>
-            <input type="email" id="resetEmail" required />
+          <div style="margin-bottom:10px;">
+            <label for="resetEmail">
+              Email
+            </label>
+            <input type="email" id="resetEmail" required>
           </div>
-          <button type="submit" class="btn" style="width: 100%" id="resetBtn">
+          <button type="submit" class="btn" style="width:100%;" id="resetBtn">
             Send reset link
           </button>
-          <button
-            type="button"
-            class="link-btn"
-            id="resetBack"
-            style="display: block; margin: 10px auto 0"
-          >
+          <button type="button" class="link-btn" id="resetBack" style="display:block; margin:10px auto 0;">
             Back to sign in
           </button>
-          <div class="err" id="resetErr"></div>
-          <div class="msg" id="resetMsg"></div>
+          <div class="err" id="resetErr">
+          </div>
+          <div class="msg" id="resetMsg">
+          </div>
         </form>
       </div>
     </div>
     <div class="modal-overlay hidden" id="recoveryOverlay">
       <div class="modal glass glow-accent">
-        <h3>Set a new password</h3>
+        <h3>
+          Set a new password
+        </h3>
         <form id="recoveryForm">
-          <div style="margin-bottom: 10px">
-            <label for="recoveryPassword"> New password </label>
-            <input
-              type="password"
-              id="recoveryPassword"
-              autocomplete="new-password"
-              required
-              minlength="6"
-            />
+          <div style="margin-bottom:10px;">
+            <label for="recoveryPassword">
+              New password
+            </label>
+            <input type="password" id="recoveryPassword" autocomplete="new-password" required minlength="6">
           </div>
-          <button
-            type="submit"
-            class="btn"
-            style="width: 100%"
-            id="recoverySave"
-          >
+          <button type="submit" class="btn" style="width:100%;" id="recoverySave">
             Update password
           </button>
-          <div class="err" id="recoveryErr"></div>
+          <div class="err" id="recoveryErr">
+          </div>
         </form>
       </div>
     </div>
-    <div class="wrap" id="appScreen" style="display: none">
-      <aside class="sidebar">
+    <div class="wrap" id="appScreen" style="display:none;">
+      <aside class="sidebar" id="appSidebar">
         <a href="#" class="sidebar-brand" id="brandHome">
-          <span class="brand-mark"> L </span>
+          <span class="brand-mark">
+            L
+          </span>
           <span>
             Ledger
-            <small> Personal finance </small>
+            <small>
+              Personal finance
+            </small>
           </span>
         </a>
-        <p class="nav-label">WORKSPACE</p>
+        <button type="button" class="mobile-menu-close icon-btn" id="mobileMenuClose" aria-label="Close navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button>
+        <p class="nav-label">
+          WORKSPACE
+        </p>
         <nav class="tabs" aria-label="Main navigation">
           <button type="button" data-view="dash" class="active">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <rect x="3" y="3" width="7" height="7" rx="1.5" />
-              <rect x="14" y="3" width="7" height="7" rx="1.5" />
-              <rect x="3" y="14" width="7" height="7" rx="1.5" />
-              <rect x="14" y="14" width="7" height="7" rx="1.5" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
             </svg>
-            <span> Overview </span>
+            <span>
+              Overview
+            </span>
           </button>
           <button type="button" data-view="history" class="">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M8 3h8l4 4v14H4V3h4Z" />
-              <path d="M8 11h8M8 15h8M8 7h4" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M8 3h8l4 4v14H4V3h4Z"/>
+              <path d="M8 11h8M8 15h8M8 7h4"/>
             </svg>
-            <span> Transactions </span>
+            <span>
+              Transactions
+            </span>
           </button>
           <button type="button" data-view="add" class="">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 5v14M5 12h14" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14"/>
             </svg>
-            <span> New entry </span>
+            <span>
+              New entry
+            </span>
           </button>
         </nav>
         <div class="sidebar-bottom">
           <button type="button" id="sidebarSettings">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M4 7h16M4 17h16" />
-              <circle cx="9" cy="7" r="3" />
-              <circle cx="15" cy="17" r="3" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 7h16M4 17h16"/>
+              <circle cx="9" cy="7" r="3"/>
+              <circle cx="15" cy="17" r="3"/>
             </svg>
-            <span> Preferences </span>
+            <span>
+              Preferences
+            </span>
           </button>
           <div class="sidebar-help">
-            <strong> A little clarity, every day. </strong>
-            <p>Keep your income and spending in one place.</p>
+            <strong>
+              A little clarity, every day.
+            </strong>
+            <p>
+              Keep your income and spending in one place.
+            </p>
             <div class="kbd-hint">
-              <kbd> N </kbd>
+              <kbd>
+                N
+              </kbd>
               New entry &nbsp;
-              <kbd> / </kbd>
+              <kbd>
+                /
+              </kbd>
               Search
             </div>
           </div>
         </div>
       </aside>
+      <button type="button" class="nav-backdrop hidden" id="navBackdrop" aria-label="Close navigation" tabindex="-1"></button>
       <header class="topbar">
-        <div>
-          <span class="topbar-title" id="viewTitle"> Overview </span>
-          <span class="topbar-note"> Your personal ledger </span>
+        <div class="topbar-leading">
+          <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-controls="appSidebar" aria-expanded="false" aria-label="Open navigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+          <a href="#" class="mobile-brand" id="mobileHome" aria-label="Ledger home"><span class="brand-mark">L</span><span>Ledger</span></a>
+          <div class="desktop-route-title">
+          <span class="topbar-title" id="viewTitle">
+            Overview
+          </span>
+          <span class="topbar-note">
+            Your personal ledger
+          </span>
+        </div>
         </div>
         <div class="topbar-actions">
           <button type="button" class="btn" id="topAdd">
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M12 5v14M5 12h14" />
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14"/>
             </svg>
-            <span> New entry </span>
+            <span>
+              New entry
+            </span>
           </button>
           <div class="account-controls">
-            <button
-              type="button"
-              class="theme-toggle"
-              id="themeToggle"
-              aria-label="Switch to dark mode"
-              aria-pressed="false"
-              title="Switch to dark mode"
-            >
-              <svg
-                class="theme-moon"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M21 12.8A9 9 0 0 1 11.2 3 9 9 0 1 0 21 12.8Z" /></svg
-              ><svg
-                class="theme-sun"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="4" />
-                <path
-                  d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"
-                />
-              </svg>
-            </button>
-            <button
-              type="button"
-              class="account-trigger"
-              id="avatarBtn"
-              aria-label="Open account menu"
-              aria-expanded="false"
-              aria-controls="acctMenu"
-            >
-              <span class="account-avatar" id="accountInitial"
-                ><svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 21v-2a8 8 0 0 1 16 0v2" /></svg></span
-              ><span class="account-first-name" id="accountFirstName"
-                >Account</span
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m6 9 6 6 6-6" />
-              </svg>
-            </button>
+            <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to dark mode" aria-pressed="false" title="Switch to dark mode"><svg class="theme-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.8A9 9 0 0 1 11.2 3 9 9 0 1 0 21 12.8Z"/></svg><svg class="theme-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M5 5l1.5 1.5M17.5 17.5 19 19M5 19l1.5-1.5M17.5 6.5 19 5"/></svg></button>
+            <button type="button" class="account-trigger" id="avatarBtn" aria-label="Open account menu" aria-expanded="false" aria-controls="acctMenu"><span class="account-avatar" id="accountInitial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span><span class="account-first-name" id="accountFirstName">Account</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
             <div class="acct-menu glass hidden" id="acctMenu">
-              <div class="account-menu-header">
-                <span class="account-avatar" id="menuInitial"
-                  ><svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    aria-hidden="true"
-                  >
-                    <circle cx="12" cy="8" r="4" />
-                    <path d="M4 21v-2a8 8 0 0 1 16 0v2" /></svg
-                ></span>
-                <div class="account-menu-identity">
-                  <strong id="menuName">Your account</strong>
-                  <div class="email" id="userEmail"></div>
-                </div>
-              </div>
-              <button type="button" id="openProfile">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 21v-2a8 8 0 0 1 16 0v2" /></svg
-                ><span>My profile</span>
-              </button>
-              <button type="button" id="openSettings">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M4 7h16M4 17h16" />
-                  <circle cx="9" cy="7" r="3" />
-                  <circle cx="15" cy="17" r="3" /></svg
-                ><span>Currency &amp; export</span>
-              </button>
-              <button type="button" id="signOutBtn">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M9 4H4v16h5M14 8l4 4-4 4M8 12h12" /></svg
-                ><span>Sign out</span>
-              </button>
+              <div class="account-menu-header"><span class="account-avatar" id="menuInitial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span><div class="account-menu-identity"><strong id="menuName">Your account</strong><div class="email" id="userEmail"></div></div></div>
+              <button type="button" id="openProfile"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><span>My profile</span></button>
+              <button type="button" id="openSettings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M4 17h16"/><circle cx="9" cy="7" r="3"/><circle cx="15" cy="17" r="3"/></svg><span>Currency &amp; export</span></button>
+              <button type="button" id="signOutBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v16h5M14 8l4 4-4 4M8 12h12"/></svg><span>Sign out</span></button>
             </div>
           </div>
         </div>
@@ -363,147 +224,165 @@
       <div class="view active" id="view-dash">
         <div class="page-heading">
           <div>
-            <p class="overline">YOUR PERSONAL FINANCES</p>
-            <h2>Financial overview</h2>
+            <p class="overline">
+              YOUR PERSONAL FINANCES
+            </p>
+            <h2>
+              Financial overview
+            </h2>
             <p class="page-sub">
               A clearer picture of what comes in and goes out.
             </p>
           </div>
           <div class="period-control">
-            <label for="periodMonth"> Summary period </label>
+            <label for="periodMonth">
+              Summary period
+            </label>
             <div>
-              <input id="periodMonth" type="month" />
+              <input id="periodMonth" type="month">
               <button type="button" class="btn-secondary" id="allTimeBtn">
                 All time
               </button>
             </div>
           </div>
         </div>
-        <p class="period-caption" id="periodCaption"></p>
+        <p class="period-caption" id="periodCaption">
+        </p>
         <div class="summary">
           <div class="card glass balance">
             <span class="metric-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <rect x="3" y="5" width="18" height="15" rx="3" />
-                <path d="M3 9h18M15 14h3" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="5" width="18" height="15" rx="3"/>
+                <path d="M3 9h18M15 14h3"/>
               </svg>
             </span>
-            <div class="eyebrow">Net balance</div>
-            <div class="value num" id="sumBalance">—</div>
+            <div class="eyebrow">
+              Net balance
+            </div>
+            <div class="value num" id="sumBalance">
+              —
+            </div>
           </div>
           <div class="card glass income">
             <span class="metric-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m7 10 5 5 5-5M12 15V3M4 16v5h16v-5" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m7 10 5 5 5-5M12 15V3M4 16v5h16v-5"/>
               </svg>
             </span>
-            <div class="eyebrow">Income</div>
-            <div class="value num" id="sumIncome">—</div>
+            <div class="eyebrow">
+              Income
+            </div>
+            <div class="value num" id="sumIncome">
+              —
+            </div>
           </div>
           <div class="card glass expense">
             <span class="metric-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="m7 8 5-5 5 5M12 3v12M4 16v5h16v-5" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m7 8 5-5 5 5M12 3v12M4 16v5h16v-5"/>
               </svg>
             </span>
-            <div class="eyebrow">Expenses</div>
-            <div class="value num" id="sumExpense">—</div>
+            <div class="eyebrow">
+              Expenses
+            </div>
+            <div class="value num" id="sumExpense">
+              —
+            </div>
           </div>
           <div class="card glass savings">
             <span class="metric-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="12" r="9" />
-                <path d="m8 16 8-8" />
-                <circle cx="8" cy="8" r="1" />
-                <circle cx="16" cy="16" r="1" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/>
+                <path d="m8 16 8-8"/>
+                <circle cx="8" cy="8" r="1"/>
+                <circle cx="16" cy="16" r="1"/>
               </svg>
             </span>
-            <div class="eyebrow">Savings rate</div>
-            <div class="value num" id="savingsRate">—</div>
-            <small> Net balance ÷ income </small>
+            <div class="eyebrow">
+              Savings rate
+            </div>
+            <div class="value num" id="savingsRate">
+              —
+            </div>
+            <small>
+              Net balance ÷ income
+            </small>
           </div>
         </div>
         <div class="analytics-grid">
           <section class="panel" id="chartSection">
             <div class="sec-head">
               <div>
-                <h2>Cash flow</h2>
-                <p>Income and expenses over the last six months</p>
+                <h2>
+                  Cash flow
+                </h2>
+                <p>
+                  Income and expenses over the last six months
+                </p>
               </div>
             </div>
             <div class="chart-box">
               <div class="legend">
                 <span>
-                  <span class="dot in"> </span>
+                  <span class="dot in">
+                  </span>
                   Income
                 </span>
                 <span>
-                  <span class="dot out"> </span>
+                  <span class="dot out">
+                  </span>
                   Expenses
                 </span>
               </div>
-              <div id="chartHolder"></div>
+              <div id="chartHolder">
+              </div>
             </div>
           </section>
           <section class="panel">
             <div class="sec-head">
               <div>
-                <h2>Where your money goes</h2>
-                <p>Expense breakdown for the selected period</p>
+                <h2>
+                  Where your money goes
+                </h2>
+                <p>
+                  Expense breakdown for the selected period
+                </p>
               </div>
             </div>
-            <div id="bars"></div>
+            <div id="bars">
+            </div>
           </section>
         </div>
         <section class="panel recent-panel">
           <div class="sec-head">
             <div>
-              <h2>Recent transactions</h2>
-              <p>Your latest five entries</p>
+              <h2>
+                Recent transactions
+              </h2>
+              <p>
+                Your latest five entries
+              </p>
             </div>
-            <button class="link-btn" id="viewAllBtn">View all →</button>
+            <button class="link-btn" id="viewAllBtn">
+              View all →
+            </button>
           </div>
-          <div class="tx-list" id="recentList"></div>
+          <div class="tx-list" id="recentList">
+          </div>
         </section>
       </div>
       <div class="view" id="view-add">
         <div class="page-heading">
           <div>
-            <p class="overline">RECORD A TRANSACTION</p>
-            <h2>New entry</h2>
-            <p class="page-sub">A few details now. A clearer balance later.</p>
+            <p class="overline">
+              RECORD A TRANSACTION
+            </p>
+            <h2>
+              New entry
+            </h2>
+            <p class="page-sub">
+              A few details now. A clearer balance later.
+            </p>
           </div>
         </div>
         <div class="entry-layout">
@@ -513,30 +392,34 @@
                 <button type="button" data-t="expense" class="active">
                   Expense
                 </button>
-                <button type="button" data-t="income">Income</button>
+                <button type="button" data-t="income">
+                  Income
+                </button>
               </div>
               <div class="full amount-field">
-                <label for="amount"> Amount </label>
-                <input
-                  type="number"
-                  id="amount"
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0.01"
-                  required
-                />
+                <label for="amount">
+                  Amount
+                </label>
+                <input type="number" id="amount" placeholder="0.00" step="0.01" min="0.01" required>
               </div>
               <div>
-                <label for="category"> Category </label>
-                <select id="category" required></select>
+                <label for="category">
+                  Category
+                </label>
+                <select id="category" required>
+                </select>
               </div>
               <div>
-                <label for="date"> Date </label>
-                <input type="date" id="date" required />
+                <label for="date">
+                  Date
+                </label>
+                <input type="date" id="date" required>
               </div>
               <div class="full">
-                <label for="note"> Note (optional) </label>
-                <input type="text" id="note" />
+                <label for="note">
+                  Note (optional)
+                </label>
+                <input type="text" id="note">
               </div>
               <div class="full entry-actions">
                 <button type="button" class="btn-secondary" id="cancelEntry">
@@ -550,28 +433,36 @@
           </div>
           <aside class="entry-guide">
             <span class="guide-icon">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M8 3h8l4 4v14H4V3h4Z" />
-                <path d="M8 11h8M8 15h8M8 7h4" />
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 3h8l4 4v14H4V3h4Z"/>
+                <path d="M8 11h8M8 15h8M8 7h4"/>
               </svg>
             </span>
-            <h3>Every entry counts.</h3>
-            <p>Choose income for money received, or expense for money spent.</p>
+            <h3>
+              Every entry counts.
+            </h3>
+            <p>
+              Choose income for money received, or expense for money spent.
+            </p>
             <dl>
-              <dt>Keep it organised</dt>
-              <dd>Use categories to understand your spending.</dd>
-              <dt>Choose the right date</dt>
-              <dd>Entries appear in the month of their transaction date.</dd>
-              <dt>Add a useful note</dt>
-              <dd>A short description makes it easier to find later.</dd>
+              <dt>
+                Keep it organised
+              </dt>
+              <dd>
+                Use categories to understand your spending.
+              </dd>
+              <dt>
+                Choose the right date
+              </dt>
+              <dd>
+                Entries appear in the month of their transaction date.
+              </dd>
+              <dt>
+                Add a useful note
+              </dt>
+              <dd>
+                A short description makes it easier to find later.
+              </dd>
             </dl>
           </aside>
         </div>
@@ -579,9 +470,15 @@
       <div class="view" id="view-history">
         <div class="page-heading">
           <div>
-            <p class="overline">YOUR LEDGER</p>
-            <h2>Transaction history</h2>
-            <p class="page-sub">Find, review and update your entries.</p>
+            <p class="overline">
+              YOUR LEDGER
+            </p>
+            <h2>
+              Transaction history
+            </h2>
+            <p class="page-sub">
+              Find, review and update your entries.
+            </p>
           </div>
           <div class="heading-actions">
             <button type="button" class="btn-secondary" id="exportFiltered">
@@ -594,55 +491,72 @@
         </div>
         <div class="filters">
           <div class="filter-field">
-            <label for="fSearch"> Search </label>
-            <input
-              type="search"
-              id="fSearch"
-              aria-label="Search transactions"
-              placeholder="Search note or category"
-            />
+            <label for="fSearch">
+              Search
+            </label>
+            <input type="search" id="fSearch" aria-label="Search transactions" placeholder="Search note or category">
           </div>
           <div class="filter-field">
-            <label for="fType"> Type </label>
+            <label for="fType">
+              Type
+            </label>
             <select id="fType" aria-label="Transaction type">
-              <option value="">All types</option>
-              <option value="income">Income</option>
-              <option value="expense">Expenses</option>
+              <option value="">
+                All types
+              </option>
+              <option value="income">
+                Income
+              </option>
+              <option value="expense">
+                Expenses
+              </option>
             </select>
           </div>
           <div class="filter-field">
-            <label for="fCategory"> Category </label>
+            <label for="fCategory">
+              Category
+            </label>
             <select aria-label="Category filter" id="fCategory">
-              <option value="">All categories</option>
+              <option value="">
+                All categories
+              </option>
             </select>
           </div>
           <div class="filter-field">
-            <label for="fFrom"> From date </label>
-            <input
-              type="date"
-              aria-label="From date"
-              id="fFrom"
-              title="From date"
-            />
+            <label for="fFrom">
+              From date
+            </label>
+            <input type="date" aria-label="From date" id="fFrom" title="From date">
           </div>
           <div class="filter-field">
-            <label for="fTo"> To date </label>
-            <input type="date" aria-label="To date" id="fTo" title="To date" />
+            <label for="fTo">
+              To date
+            </label>
+            <input type="date" aria-label="To date" id="fTo" title="To date">
           </div>
         </div>
-        <p id="historySummary" class="period-caption" aria-live="polite"></p>
-        <div class="tx-list" id="historyList"></div>
+        <p id="historySummary" class="period-caption" aria-live="polite">
+        </p>
+        <div class="tx-list" id="historyList">
+        </div>
         <div class="pagination">
           <label for="pageSize">
             Rows per page
             <select id="pageSize">
-              <option>10</option>
-              <option selected>20</option>
-              <option>50</option>
+              <option>
+                10
+              </option>
+              <option selected>
+                20
+              </option>
+              <option>
+                50
+              </option>
             </select>
           </label>
           <div>
-            <span id="pageInfo"> </span>
+            <span id="pageInfo">
+            </span>
             <button type="button" class="btn-secondary" id="prevPage">
               Previous
             </button>
@@ -655,455 +569,119 @@
     </div>
     <div class="modal-overlay hidden" id="editOverlay">
       <div class="modal glass glow-accent">
-        <h3>Edit entry</h3>
+        <h3>
+          Edit entry
+        </h3>
         <form id="editForm">
-          <div class="full toggle" style="margin-bottom: 10px">
-            <button type="button" data-t="expense">Expense</button>
-            <button type="button" data-t="income">Income</button>
+          <div class="full toggle" style="margin-bottom:10px;">
+            <button type="button" data-t="expense">
+              Expense
+            </button>
+            <button type="button" data-t="income">
+              Income
+            </button>
           </div>
-          <div style="margin-bottom: 10px">
-            <label for="editAmount"> Amount </label>
-            <input
-              type="number"
-              id="editAmount"
-              step="0.01"
-              min="0.01"
-              required
-            />
+          <div style="margin-bottom:10px;">
+            <label for="editAmount">
+              Amount
+            </label>
+            <input type="number" id="editAmount" step="0.01" min="0.01" required>
           </div>
-          <div style="margin-bottom: 10px">
-            <label for="editCategory"> Category </label>
-            <select id="editCategory" required></select>
+          <div style="margin-bottom:10px;">
+            <label for="editCategory">
+              Category
+            </label>
+            <select id="editCategory" required>
+            </select>
           </div>
-          <div style="margin-bottom: 10px">
-            <label for="editDate"> Date </label>
-            <input type="date" id="editDate" required />
+          <div style="margin-bottom:10px;">
+            <label for="editDate">
+              Date
+            </label>
+            <input type="date" id="editDate" required>
           </div>
           <div>
-            <label for="editNote"> Note </label>
-            <input type="text" id="editNote" />
+            <label for="editNote">
+              Note
+            </label>
+            <input type="text" id="editNote">
           </div>
           <div class="modal-actions">
             <button type="button" class="btn-secondary" id="editCancel">
               Cancel
             </button>
-            <button type="submit" class="btn" id="editSave">Save</button>
-          </div>
-        </form>
-      </div>
-    </div>
-    <div class="modal-overlay hidden" id="profileOverlay">
-      <div
-        class="modal glass profile-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="profileTitle"
-      >
-        <div class="profile-modal-heading">
-          <div>
-            <h3 id="profileTitle">Account settings</h3>
-            <p>Manage your personal details and sign-in preferences.</p>
-          </div>
-          <button
-            type="button"
-            class="icon-btn"
-            id="profileDismiss"
-            aria-label="Close account settings"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m6 6 12 12M6 18 18 6" />
-            </svg>
-          </button>
-        </div>
-        <div class="profile-content">
-          <aside class="profile-identity">
-            <span class="profile-avatar" id="profileInitial"
-              ><svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 21v-2a8 8 0 0 1 16 0v2" /></svg
-            ></span>
-            <h4 id="profileDisplayName">Your account</h4>
-            <p id="profileDisplayEmail"></p>
-            <span class="member-label">Member since</span
-            ><span id="profileSince"></span>
-          </aside>
-          <div class="profile-sections">
-            <section class="profile-section">
-              <div class="profile-section-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="8" r="4" />
-                  <path d="M4 21v-2a8 8 0 0 1 16 0v2" />
-                </svg>
-                <div>
-                  <h4>Personal details</h4>
-                  <p>Your first name appears in the account menu.</p>
-                </div>
-              </div>
-              <label for="profileName">Full name</label>
-              <div class="profile-field-row">
-                <input
-                  type="text"
-                  id="profileName"
-                  autocomplete="name"
-                  maxlength="100"
-                  placeholder="Enter your full name"
-                /><button type="button" class="btn" id="saveNameBtn">
-                  Save name
-                </button>
-              </div>
-            </section>
-            <section class="profile-section">
-              <div class="profile-section-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <rect x="3" y="5" width="18" height="14" rx="2" />
-                  <path d="m3 6 9 7 9-7" />
-                </svg>
-                <div>
-                  <h4>Email address</h4>
-                  <p>Confirm your new email using the link we send you.</p>
-                </div>
-              </div>
-              <label for="profileEmail">Email</label>
-              <div class="profile-field-row">
-                <input
-                  type="email"
-                  id="profileEmail"
-                  autocomplete="email"
-                /><button type="button" class="btn-secondary" id="saveEmailBtn">
-                  Update email
-                </button>
-              </div>
-            </section>
-            <section class="profile-section">
-              <div class="profile-section-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <rect x="5" y="10" width="14" height="11" rx="2" />
-                  <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-                </svg>
-                <div>
-                  <h4>Password & security</h4>
-                  <p>
-                    Use at least 6 characters. Leave blank to keep your
-                    password.
-                  </p>
-                </div>
-              </div>
-              <label for="profilePassword">New password</label>
-              <div class="profile-field-row">
-                <input
-                  type="password"
-                  id="profilePassword"
-                  autocomplete="new-password"
-                  minlength="6"
-                  placeholder="Enter a new password"
-                /><button
-                  type="button"
-                  class="btn-secondary"
-                  id="savePasswordBtn"
-                >
-                  Update password
-                </button>
-              </div>
-            </section>
-            <div class="err" id="profileErr" role="alert"></div>
-            <div class="msg" id="profileMsg" role="status"></div>
-          </div>
-        </div>
-        <div class="profile-modal-footer">
-          <button type="button" class="btn-secondary" id="profileClose">
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="modal-overlay hidden" id="currencyConfirmOverlay">
-      <div
-        class="modal glass currency-confirm-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="currencyConfirmTitle"
-      >
-        <span class="currency-confirm-icon"
-          ><svg
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="1.7"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            aria-hidden="true"
-          >
-            <circle cx="12" cy="12" r="9" />
-            <path d="M12 6v12M15 8h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9" /></svg
-        ></span>
-        <h3 id="currencyConfirmTitle">Switch currency?</h3>
-        <p id="currencyConfirmText" class="preference-help"></p>
-        <div class="currency-choice">
-          <button type="button" class="btn" id="convertYesBtn">
-            Convert my amounts
-          </button>
-          <p>
-            Recalculate all existing entries using the current exchange rate.
-          </p>
-        </div>
-        <div class="currency-choice">
-          <button type="button" class="btn-secondary" id="convertNoBtn">
-            Keep amounts, change currency
-          </button>
-          <p>
-            Change the currency label. Existing numeric values stay the same.
-          </p>
-        </div>
-        <div class="err" id="convertErr" role="alert"></div>
-        <button type="button" class="link-btn" id="convertCancelBtn">
-          Cancel
-        </button>
-      </div>
-    </div>
-    <div class="modal-overlay hidden" id="settingsOverlay">
-      <div
-        class="modal glass preferences-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="preferencesTitle"
-      >
-        <div class="profile-modal-heading">
-          <div>
-            <h3 id="preferencesTitle">Ledger preferences</h3>
-            <p>Manage your currency, exports and transaction categories.</p>
-          </div>
-          <button
-            type="button"
-            class="icon-btn"
-            id="settingsDismiss"
-            aria-label="Close preferences"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="1.7"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m6 6 12 12M6 18 18 6" />
-            </svg>
-          </button>
-        </div>
-        <div class="preferences-grid">
-          <div class="preferences-left">
-            <section class="preference-section">
-              <div class="profile-section-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 6v12M15 8h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9" />
-                </svg>
-                <div>
-                  <h4>Currency</h4>
-                  <p>Choose the currency for your ledger.</p>
-                </div>
-              </div>
-              <label for="currencySelect">Display currency</label
-              ><select id="currencySelect">
-                <option value="USD">USD — US Dollar</option>
-                <option value="EUR">EUR — Euro</option>
-                <option value="GBP">GBP — British Pound</option>
-                <option value="BDT">BDT — Bangladeshi Taka</option>
-                <option value="INR">INR — Indian Rupee</option>
-                <option value="JPY">JPY — Japanese Yen</option>
-                <option value="AUD">AUD — Australian Dollar</option>
-                <option value="CAD">CAD — Canadian Dollar</option>
-              </select>
-              <p class="preference-help">
-                When switching, choose whether to convert all existing amounts
-                or keep their numeric values.
-              </p>
-            </section>
-            <section class="preference-section export-section">
-              <div class="profile-section-title">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4" />
-                </svg>
-                <div>
-                  <h4>Export your data</h4>
-                  <p>Download all transactions as a CSV file.</p>
-                </div>
-              </div>
-              <p class="preference-help">
-                Includes dates, income or expense, categories, amounts and
-                notes. Your filters do not affect this export.
-              </p>
-              <button type="button" class="btn-secondary" id="exportBtn">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.7"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  aria-hidden="true"
-                >
-                  <path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4" /></svg
-                ><span>Download CSV</span>
-              </button>
-            </section>
-          </div>
-          <section class="preference-section categories-section">
-            <div class="profile-section-title">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.7"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                aria-hidden="true"
-              >
-                <path d="M3 3h8l10 10-8 8L3 11V3Z" />
-                <circle cx="7" cy="7" r="1" />
-              </svg>
-              <div>
-                <h4>Transaction categories</h4>
-                <p>Organise your income and spending.</p>
-              </div>
-            </div>
-            <div class="toggle">
-              <button
-                type="button"
-                data-t="expense"
-                class="active"
-                id="catTypeExpense"
-              >
-                Expenses</button
-              ><button type="button" data-t="income" id="catTypeIncome">
-                Income
-              </button>
-            </div>
-            <div class="category-legend">
-              Edit a name or delete a category. Existing entries are kept.
-            </div>
-            <div id="catChips" class="category-list"></div>
-            <label for="newCatName">Add a custom category</label>
-            <div class="category-input-row">
-              <input
-                type="text"
-                id="newCatName"
-                placeholder="e.g. Education"
-                maxlength="80"
-              /><button type="button" class="btn" id="addCatBtn">Add</button>
-            </div>
-          </section>
-        </div>
-        <div class="profile-modal-footer">
-          <button type="button" class="btn-secondary" id="settingsClose">
-            Done
-          </button>
-        </div>
-      </div>
-    </div>
-    <div class="modal-overlay hidden" id="categoryActionOverlay">
-      <div
-        class="modal glass category-action-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="categoryActionTitle"
-      >
-        <h3 id="categoryActionTitle">Manage category</h3>
-        <p class="preference-help" id="categoryActionDescription"></p>
-        <p class="category-affected" id="categoryAffected"></p>
-        <form id="categoryActionForm">
-          <div id="categoryRenameField">
-            <label for="categoryNewName">New name</label
-            ><input id="categoryNewName" type="text" maxlength="80" />
-          </div>
-          <div id="categoryReplacementField">
-            <label for="categoryReplacement">Move entries to</label
-            ><select id="categoryReplacement"></select>
-            <p class="preference-help">
-              Required when this category has entries. Add a replacement
-              category first if needed.
-            </p>
-          </div>
-          <div class="err" id="categoryActionErr" role="alert"></div>
-          <div class="modal-actions">
-            <button
-              type="button"
-              class="btn-secondary"
-              id="categoryActionCancel"
-            >
-              Cancel</button
-            ><button type="submit" class="btn" id="categoryActionSave">
+            <button type="submit" class="btn" id="editSave">
               Save
             </button>
           </div>
         </form>
       </div>
     </div>
-    <div
-      class="app-notice hidden"
-      id="appNotice"
-      role="status"
-      aria-live="polite"
-    ></div>
-    <div class="toast glass hidden" id="toast" role="status"></div>
-    <script src="config.js"></script>
-    <script src="app.js"></script>
+    <div class="modal-overlay hidden" id="profileOverlay">
+      <div class="modal glass profile-modal" role="dialog" aria-modal="true" aria-labelledby="profileTitle">
+        <div class="profile-modal-heading"><div><h3 id="profileTitle">Account settings</h3><p>Manage your personal details and sign-in preferences.</p></div><button type="button" class="icon-btn" id="profileDismiss" aria-label="Close account settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+        <div class="profile-content">
+          <aside class="profile-identity"><span class="profile-avatar" id="profileInitial"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span><h4 id="profileDisplayName">Your account</h4><p id="profileDisplayEmail"></p><span class="member-label">Member since</span><span id="profileSince"></span></aside>
+          <div class="profile-sections">
+            <section class="profile-section"><div class="profile-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg><div><h4>Personal details</h4><p>Your first name appears in the account menu.</p></div></div><label for="profileName">Full name</label><div class="profile-field-row"><input type="text" id="profileName" autocomplete="name" maxlength="100" placeholder="Enter your full name"><button type="button" class="btn" id="saveNameBtn">Save name</button></div></section>
+            <section class="profile-section"><div class="profile-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg><div><h4>Email address</h4><p>Confirm your new email using the link we send you.</p></div></div><label for="profileEmail">Email</label><div class="profile-field-row"><input type="email" id="profileEmail" autocomplete="email"><button type="button" class="btn-secondary" id="saveEmailBtn">Update email</button></div></section>
+            <section class="profile-section"><div class="profile-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg><div><h4>Password & security</h4><p>Use at least 6 characters. Leave blank to keep your password.</p></div></div><label for="profilePassword">New password</label><div class="profile-field-row"><input type="password" id="profilePassword" autocomplete="new-password" minlength="6" placeholder="Enter a new password"><button type="button" class="btn-secondary" id="savePasswordBtn">Update password</button></div></section>
+            <div class="err" id="profileErr" role="alert"></div><div class="msg" id="profileMsg" role="status"></div>
+          </div>
+        </div>
+        <div class="profile-modal-footer"><button type="button" class="btn-secondary" id="profileClose">Done</button></div>
+      </div>
+    </div>
+    <div class="modal-overlay hidden" id="currencyConfirmOverlay">
+      <div class="modal glass currency-confirm-modal" role="dialog" aria-modal="true" aria-labelledby="currencyConfirmTitle"><span class="currency-confirm-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6v12M15 8h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9"/></svg></span><h3 id="currencyConfirmTitle">Switch currency?</h3><p id="currencyConfirmText" class="preference-help"></p><div class="currency-choice"><button type="button" class="btn" id="convertYesBtn">Convert my amounts</button><p>Recalculate all existing entries using the current exchange rate.</p></div><div class="currency-choice"><button type="button" class="btn-secondary" id="convertNoBtn">Keep amounts, change currency</button><p>Change the currency label. Existing numeric values stay the same.</p></div><div class="err" id="convertErr" role="alert"></div><button type="button" class="link-btn" id="convertCancelBtn">Cancel</button></div>
+    </div>
+    <div class="modal-overlay hidden" id="settingsOverlay">
+      <div class="modal glass preferences-modal" role="dialog" aria-modal="true" aria-labelledby="preferencesTitle">
+        <div class="profile-modal-heading"><div><h3 id="preferencesTitle">Ledger preferences</h3><p>Manage your currency, exports and transaction categories.</p></div><button type="button" class="icon-btn" id="settingsDismiss" aria-label="Close preferences"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 6 12 12M6 18 18 6"/></svg></button></div>
+        <div class="preferences-grid">
+          <div class="preferences-left">
+            <section class="preference-section"><div class="profile-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 6v12M15 8h-4a2 2 0 0 0 0 4h2a2 2 0 0 1 0 4H9"/></svg><div><h4>Currency</h4><p>Choose the currency for your ledger.</p></div></div><label for="currencySelect">Display currency</label><select id="currencySelect">
+          <option value="USD">
+            USD — US Dollar
+          </option>
+          <option value="EUR">
+            EUR — Euro
+          </option>
+          <option value="GBP">
+            GBP — British Pound
+          </option>
+          <option value="BDT">
+            BDT — Bangladeshi Taka
+          </option>
+          <option value="INR">
+            INR — Indian Rupee
+          </option>
+          <option value="JPY">
+            JPY — Japanese Yen
+          </option>
+          <option value="AUD">
+            AUD — Australian Dollar
+          </option>
+          <option value="CAD">
+            CAD — Canadian Dollar
+          </option>
+        </select><p class="preference-help">When switching, choose whether to convert all existing amounts or keep their numeric values.</p></section>
+            <section class="preference-section export-section"><div class="profile-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg><div><h4>Export your data</h4><p>Download all transactions as a CSV file.</p></div></div><p class="preference-help">Includes dates, income or expense, categories, amounts and notes. Your filters do not affect this export.</p><button type="button" class="btn-secondary" id="exportBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 17v4h16v-4"/></svg><span>Download CSV</span></button></section>
+          </div>
+          <section class="preference-section categories-section"><div class="profile-section-title"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3h8l10 10-8 8L3 11V3Z"/><circle cx="7" cy="7" r="1"/></svg><div><h4>Transaction categories</h4><p>Organise your income and spending.</p></div></div><div class="toggle"><button type="button" data-t="expense" class="active" id="catTypeExpense">Expenses</button><button type="button" data-t="income" id="catTypeIncome">Income</button></div><div class="category-legend">Edit a name or delete a category. Existing entries are kept.</div><div id="catChips" class="category-list"></div><label for="newCatName">Add a custom category</label><div class="category-input-row"><input type="text" id="newCatName" placeholder="e.g. Education" maxlength="80"><button type="button" class="btn" id="addCatBtn">Add</button></div></section>
+        </div>
+        <div class="profile-modal-footer"><button type="button" class="btn-secondary" id="settingsClose">Done</button></div>
+      </div>
+    </div>
+<div class="modal-overlay hidden" id="categoryActionOverlay"><div class="modal glass category-action-modal" role="dialog" aria-modal="true" aria-labelledby="categoryActionTitle"><h3 id="categoryActionTitle">Manage category</h3><p class="preference-help" id="categoryActionDescription"></p><p class="category-affected" id="categoryAffected"></p><form id="categoryActionForm"><div id="categoryRenameField"><label for="categoryNewName">New name</label><input id="categoryNewName" type="text" maxlength="80"></div><div id="categoryReplacementField"><label for="categoryReplacement">Move entries to</label><select id="categoryReplacement"></select><p class="preference-help">Required when this category has entries. Add a replacement category first if needed.</p></div><div class="err" id="categoryActionErr" role="alert"></div><div class="modal-actions"><button type="button" class="btn-secondary" id="categoryActionCancel">Cancel</button><button type="submit" class="btn" id="categoryActionSave">Save</button></div></form></div></div>
+    <div class="app-notice hidden" id="appNotice" role="status" aria-live="polite">
+    </div>
+    <div class="toast glass hidden" id="toast" role="status">
+    </div>
+    <script src="config.js">
+    </script>
+    <script src="app.js">
+    </script>
+    <script src="mobile-nav.js"></script>
   </body>
 </html>
