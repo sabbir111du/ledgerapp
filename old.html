@@ -1,0 +1,2333 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <title>Ledger</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Ledger" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta
+      name="theme-color"
+      content="#f2f2f7"
+      media="(prefers-color-scheme: light)"
+    />
+    <meta
+      name="theme-color"
+      content="#000000"
+      media="(prefers-color-scheme: dark)"
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='15' fill='%23007aff'/%3E%3Cpath d='M22 15v28h21' fill='none' stroke='white' stroke-width='7' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <meta name="color-scheme" content="light dark" />
+    <style>
+      :root {
+        --bg: #f2f2f7;
+        --card: #ffffff;
+        --fill: rgba(118, 118, 128, 0.12);
+        --sep: rgba(60, 60, 67, 0.16);
+        --text: #000000;
+        --muted: #6c6c70;
+        --blue: #007aff;
+        --green: #34c759;
+        --red: #ff3b30;
+        --income: #248a3d;
+        --expense: #d70015;
+        --income-glow: transparent;
+        --expense-glow: transparent;
+        --seg-on: #ffffff;
+        --tint: rgba(0, 122, 255, 0.12);
+        --font:
+          -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+          Inter, system-ui, "Segoe UI", Roboto, sans-serif;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #000000;
+          --card: #1c1c1e;
+          --fill: rgba(118, 118, 128, 0.24);
+          --sep: rgba(84, 84, 88, 0.6);
+          --text: #ffffff;
+          --muted: #98989f;
+          --blue: #0a84ff;
+          --green: #30d158;
+          --red: #ff453a;
+          --income: #30d158;
+          --expense: #ff6961;
+          --seg-on: #636366;
+          --tint: rgba(10, 132, 255, 0.2);
+        }
+      }
+      * {
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 400 16px/1.4 var(--font);
+        min-height: 100vh;
+        -webkit-font-smoothing: antialiased;
+      }
+      .num {
+        font-variant-numeric: tabular-nums;
+      }
+      button,
+      input,
+      select {
+        font-family: inherit;
+      }
+      .wrap {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 14px 16px 64px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      :focus-visible {
+        outline: 3px solid var(--tint);
+        outline-offset: 1px;
+      }
+
+      .glass {
+        background: var(--card);
+        border-radius: 16px;
+      }
+      .eyebrow {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--muted);
+      }
+
+      header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 6px 0 14px;
+        position: relative;
+      }
+      h1 {
+        font-size: 34px;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+      .avatar {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: var(--tint);
+        color: var(--blue);
+        font-weight: 600;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+      }
+      .acct-menu {
+        position: absolute;
+        right: 0;
+        top: 48px;
+        width: 240px;
+        padding: 4px 0;
+        z-index: 20;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+        border-radius: 14px;
+      }
+      .acct-menu .email {
+        font-size: 13px;
+        color: var(--muted);
+        padding: 10px 16px;
+        border-bottom: 0.5px solid var(--sep);
+        word-break: break-all;
+      }
+      .acct-menu button {
+        display: block;
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
+        border-bottom: 0.5px solid var(--sep);
+        color: var(--text);
+        padding: 12px 16px;
+        font-size: 16px;
+        cursor: pointer;
+      }
+      .acct-menu button:last-child {
+        border-bottom: none;
+        color: var(--red);
+      }
+      .acct-menu button:active {
+        background: var(--fill);
+      }
+
+      .auth-box {
+        max-width: 390px;
+        margin: 56px auto;
+        padding: 28px 22px;
+      }
+      .auth-box h1 {
+        text-align: center;
+        font-size: 38px;
+        margin-bottom: 4px;
+      }
+      .sub {
+        color: var(--muted);
+        font-size: 15px;
+        margin: 0 0 18px;
+        text-align: center;
+      }
+      .auth-tabs {
+        display: flex;
+        padding: 2px;
+        background: var(--fill);
+        border-radius: 9px;
+        margin-bottom: 18px;
+      }
+      .auth-tabs button {
+        flex: 1;
+        padding: 7px;
+        border: none;
+        border-radius: 7px;
+        background: none;
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .auth-tabs button.active {
+        background: var(--seg-on);
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      }
+      .err {
+        color: var(--expense);
+        font-size: 14px;
+        margin-top: 10px;
+        min-height: 16px;
+      }
+      .msg {
+        color: var(--income);
+        font-size: 14px;
+        margin-top: 10px;
+        min-height: 16px;
+      }
+
+      .tabs {
+        display: flex;
+        padding: 2px;
+        background: var(--fill);
+        border-radius: 9px;
+        margin-bottom: 22px;
+      }
+      .tabs button {
+        flex: 1;
+        padding: 7px 4px;
+        border: none;
+        border-radius: 7px;
+        background: none;
+        color: var(--text);
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .tabs button.active {
+        background: var(--seg-on);
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      }
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+      }
+
+      .summary {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 28px;
+      }
+      .card {
+        padding: 16px;
+      }
+      .card .value {
+        font-size: clamp(15px, 4.6vw, 24px);
+        font-weight: 700;
+        margin-top: 4px;
+        letter-spacing: -0.02em;
+        white-space: nowrap;
+      }
+      .card .eyebrow::before {
+        content: "";
+        display: inline-block;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        margin-right: 7px;
+      }
+      .card.income .eyebrow::before {
+        background: var(--green);
+      }
+      .card.expense .eyebrow::before {
+        background: var(--red);
+      }
+      .card.income .value {
+        color: var(--income);
+      }
+      .card.expense .value {
+        color: var(--expense);
+      }
+      .card.balance {
+        grid-column: 1/-1;
+        background: var(--blue);
+        color: #fff;
+        padding: 20px 18px;
+      }
+      .card.balance .eyebrow {
+        color: rgba(255, 255, 255, 0.8);
+      }
+      .card.balance .value {
+        font-size: clamp(28px, 9vw, 40px);
+        font-weight: 700;
+        margin-top: 2px;
+      }
+
+      section {
+        margin-bottom: 28px;
+      }
+      .sec-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin: 0 4px 10px;
+      }
+      .sec-head h2 {
+        font-size: 22px;
+        font-weight: 700;
+        margin: 0;
+        letter-spacing: -0.01em;
+      }
+      .link-btn {
+        background: none;
+        border: none;
+        color: var(--blue);
+        font-size: 16px;
+        cursor: pointer;
+        padding: 0;
+      }
+      .link-btn:active {
+        opacity: 0.5;
+      }
+
+      .chart-box {
+        padding: 18px 16px 12px;
+      }
+      .legend {
+        display: flex;
+        gap: 16px;
+        font-size: 13px;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+      .legend span {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+      }
+      .dot.in {
+        background: var(--green);
+      }
+      .dot.out {
+        background: var(--red);
+      }
+      .chart {
+        position: relative;
+        height: 150px;
+        margin-left: 44px;
+      }
+      .gridline {
+        position: absolute;
+        left: 0;
+        right: 0;
+        border-top: 0.5px solid var(--sep);
+      }
+      .gridline .gl-label {
+        position: absolute;
+        left: -44px;
+        top: -8px;
+        width: 38px;
+        text-align: right;
+        font-size: 11px;
+        color: var(--muted);
+      }
+      .bars-row {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: flex-end;
+        gap: 12px;
+        padding: 0 4px;
+      }
+      .bar-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        height: 100%;
+        justify-content: flex-end;
+      }
+      .bar-pair {
+        display: flex;
+        gap: 3px;
+        align-items: flex-end;
+        height: 100%;
+      }
+      .bar-pair div {
+        width: 11px;
+        border-radius: 4px 4px 0 0;
+        min-height: 3px;
+      }
+      .b-in {
+        background: var(--green);
+      }
+      .b-out {
+        background: var(--red);
+      }
+      .bar-label {
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 6px;
+      }
+      .chart-empty {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 150px;
+        color: var(--muted);
+        font-size: 15px;
+        text-align: center;
+        gap: 4px;
+      }
+
+      #bars {
+        background: var(--card);
+        border-radius: 16px;
+        padding: 14px 16px 4px;
+      }
+      #bars .empty {
+        padding: 14px 0 18px;
+      }
+      .bar-row {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        column-gap: 12px;
+        row-gap: 7px;
+        align-items: baseline;
+        margin-bottom: 16px;
+        font-size: 15px;
+      }
+      .bar-row .name {
+        grid-column: 1;
+        grid-row: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-weight: 500;
+      }
+      .bar-pct {
+        grid-column: 2;
+        grid-row: 1;
+        color: var(--muted);
+        font-size: 13px;
+        text-align: right;
+      }
+      .bar-amt {
+        grid-column: 3;
+        grid-row: 1;
+        font-weight: 600;
+        text-align: right;
+        white-space: nowrap;
+      }
+      .bar-track {
+        grid-column: 1/-1;
+        grid-row: 2;
+        background: var(--fill);
+        border-radius: 99px;
+        height: 8px;
+        overflow: hidden;
+      }
+      .bar-fill {
+        height: 100%;
+        background: var(--blue);
+        border-radius: 99px;
+      }
+
+      .tx-list {
+        display: flex;
+        flex-direction: column;
+        background: var(--card);
+        border-radius: 16px;
+        overflow: hidden;
+      }
+      .tx-list .tx.glass {
+        display: grid;
+        grid-template-columns: 1fr auto auto;
+        align-items: center;
+        gap: 10px;
+        padding: 13px 16px;
+        border-radius: 0;
+        background: none;
+        border-bottom: 0.5px solid var(--sep);
+      }
+      .tx-list .tx.glass:last-child {
+        border-bottom: none;
+      }
+      .tx-left {
+        min-width: 0;
+      }
+      .tx-cat {
+        font-size: 16px;
+        font-weight: 500;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tx-meta {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .tx-amt {
+        font-weight: 600;
+        font-size: 16px;
+        text-align: right;
+        white-space: nowrap;
+      }
+      .tx-actions {
+        display: flex;
+        gap: 0;
+      }
+      .icon-btn {
+        background: none;
+        border: none;
+        color: var(--blue);
+        cursor: pointer;
+        font-size: 16px;
+        padding: 6px 8px;
+        border-radius: 8px;
+      }
+      .icon-btn.danger {
+        color: var(--red);
+      }
+      .icon-btn:active {
+        background: var(--fill);
+      }
+      .empty {
+        color: var(--muted);
+        font-size: 15px;
+        padding: 24px 16px;
+        text-align: center;
+      }
+
+      form.entry-form {
+        padding: 18px 16px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      form .full {
+        grid-column: 1/-1;
+      }
+      label {
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--muted);
+        display: block;
+        margin: 0 0 6px 2px;
+      }
+      input,
+      select {
+        width: 100%;
+        background: var(--fill);
+        border: none;
+        color: var(--text);
+        padding: 12px 13px;
+        border-radius: 10px;
+        font-size: 16px;
+        min-height: 46px;
+      }
+      input:focus,
+      select:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px var(--tint);
+      }
+      .toggle {
+        display: flex;
+        padding: 2px;
+        background: var(--fill);
+        border-radius: 9px;
+      }
+      .toggle button {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 7px;
+        background: none;
+        color: var(--text);
+        font-size: 15px;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .toggle button.active {
+        background: var(--seg-on);
+        font-weight: 600;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      }
+      .toggle button.active[data-t="income"] {
+        color: var(--income);
+      }
+      .toggle button.active[data-t="expense"] {
+        color: var(--expense);
+      }
+      .btn {
+        background: var(--blue);
+        color: #fff;
+        border: none;
+        border-radius: 13px;
+        padding: 14px;
+        font-weight: 600;
+        font-size: 17px;
+        cursor: pointer;
+      }
+      .btn:active {
+        opacity: 0.7;
+      }
+      .btn:disabled {
+        opacity: 0.4;
+      }
+      .btn-secondary {
+        background: var(--tint);
+        color: var(--blue);
+        border: none;
+        border-radius: 12px;
+        padding: 11px 14px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .btn-secondary:active {
+        opacity: 0.6;
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: var(--tint);
+        color: var(--blue);
+        border-radius: 99px;
+        padding: 5px 12px;
+        font-size: 14px;
+        font-weight: 500;
+      }
+      .chip.default {
+        background: var(--fill);
+        color: var(--muted);
+      }
+      .chip button {
+        background: none;
+        border: none;
+        color: inherit;
+        cursor: pointer;
+        font-size: 13px;
+        padding: 0;
+      }
+
+      .filters {
+        display: grid;
+        grid-template-columns: 1.4fr 1fr 0.9fr 0.9fr;
+        gap: 8px;
+        margin-bottom: 14px;
+      }
+      @media (max-width: 600px) {
+        .filters {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 50;
+        padding: 16px;
+        overflow-y: auto;
+      }
+      .modal {
+        padding: 22px 20px;
+        width: 100%;
+        max-width: 420px;
+        max-height: 92vh;
+        overflow-y: auto;
+        border-radius: 20px;
+        animation: sheet 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+      .modal h3 {
+        margin: 0 0 16px;
+        font-size: 22px;
+        font-weight: 700;
+        letter-spacing: -0.01em;
+      }
+      .modal-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 16px;
+      }
+      .modal-actions .btn,
+      .modal-actions .btn-secondary {
+        flex: 1;
+      }
+      @media (max-width: 600px) {
+        .modal-overlay {
+          align-items: flex-end;
+          padding: 0;
+        }
+        .modal {
+          max-width: none;
+          border-radius: 20px 20px 0 0;
+          padding-bottom: 34px;
+        }
+      }
+      @keyframes sheet {
+        from {
+          transform: translateY(40px);
+          opacity: 0;
+        }
+        to {
+          transform: none;
+          opacity: 1;
+        }
+      }
+
+      .toast {
+        position: fixed;
+        left: 50%;
+        bottom: 28px;
+        transform: translateX(-50%);
+        padding: 12px 18px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        font-size: 15px;
+        z-index: 60;
+        background: #2c2c2e;
+        color: #fff;
+        border-radius: 14px;
+        box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+      }
+      .toast button {
+        background: none;
+        border: none;
+        color: #0a84ff;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 15px;
+      }
+
+      /* whole-system polish: safe areas + larger screens */
+      .wrap {
+        padding-top: max(14px, env(safe-area-inset-top));
+        padding-left: max(16px, env(safe-area-inset-left));
+        padding-right: max(16px, env(safe-area-inset-right));
+      }
+      @media (max-width: 600px) {
+        .modal {
+          padding-bottom: max(34px, env(safe-area-inset-bottom));
+        }
+      }
+      @media (min-width: 860px) {
+        .wrap {
+          max-width: 860px;
+          padding-top: 28px;
+        }
+        h1 {
+          font-size: 40px;
+        }
+        .summary {
+          grid-template-columns: 1.5fr 1fr 1fr;
+        }
+        .card.balance {
+          grid-column: auto;
+        }
+        .tx-list .tx.glass:hover {
+          background: var(--fill);
+        }
+        .filters {
+          grid-template-columns: 2fr 1.2fr 1fr 1fr;
+        }
+      }
+
+      /* large screens: sidebar, two columns, table */
+      .dash-cols,
+      .col-a,
+      .col-b {
+        display: contents;
+      }
+      #quickAdd {
+        display: none;
+      }
+      .kbd-hint {
+        display: none;
+        margin-top: 20px;
+        padding: 0 12px;
+        font-size: 13px;
+        color: var(--muted);
+        line-height: 2;
+      }
+      kbd {
+        font: inherit;
+        font-size: 12px;
+        background: var(--fill);
+        border-radius: 5px;
+        padding: 1px 7px;
+      }
+      .tx-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 15px;
+      }
+      .tx-table th {
+        text-align: left;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--muted);
+        padding: 12px 16px;
+        border-bottom: 0.5px solid var(--sep);
+        cursor: pointer;
+        user-select: none;
+        white-space: nowrap;
+      }
+      .tx-table th:hover {
+        color: var(--text);
+      }
+      .tx-table th.r,
+      .tx-table td.r {
+        text-align: right;
+      }
+      .tx-table td {
+        padding: 12px 16px;
+        border-bottom: 0.5px solid var(--sep);
+      }
+      .tx-table td.note {
+        color: var(--muted);
+        max-width: 280px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .tx-table td.r {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+      .tx-table td.acts {
+        text-align: right;
+        white-space: nowrap;
+        width: 1%;
+      }
+      .tx-table tbody tr:last-child td {
+        border-bottom: none;
+      }
+      .tx-table tbody tr:hover {
+        background: var(--fill);
+      }
+      @media (hover: hover) {
+        .tx-table .acts {
+          opacity: 0;
+        }
+        .tx-table tr:hover .acts,
+        .tx-table tr:focus-within .acts {
+          opacity: 1;
+        }
+      }
+      @media (min-width: 1000px) {
+        :root {
+          --side: 220px;
+        }
+        #appScreen.wrap {
+          max-width: 1240px;
+          padding: 32px 32px 64px calc(var(--side) + 64px);
+        }
+        #appScreen > header {
+          position: fixed;
+          top: 32px;
+          left: max(32px, calc(50vw - 620px + 32px));
+          width: var(--side);
+          margin: 0;
+          z-index: 30;
+        }
+        #appScreen > .tabs {
+          position: fixed;
+          top: 104px;
+          left: max(32px, calc(50vw - 620px + 32px));
+          width: var(--side);
+          flex-direction: column;
+          background: none;
+          padding: 0;
+          gap: 2px;
+          margin: 0;
+        }
+        .tabs button {
+          text-align: left;
+          padding: 10px 12px;
+          border-radius: 10px;
+          font-size: 15px;
+        }
+        .tabs button.active {
+          background: var(--tint);
+          color: var(--blue);
+          box-shadow: none;
+        }
+        .dash-cols {
+          display: grid;
+          grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+          gap: 0 28px;
+          align-items: start;
+        }
+        .col-a,
+        .col-b {
+          display: block;
+          min-width: 0;
+        }
+        #quickAdd {
+          display: block;
+        }
+        #quickAdd form.entry-form {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      @media (min-width: 1000px) and (hover: hover) and (pointer: fine) {
+        .kbd-hint {
+          display: block;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        * {
+          animation: none !important;
+          transition: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap" id="authScreen" style="display: none">
+      <div class="auth-box glass glow-accent">
+        <h1>Ledger</h1>
+        <p class="sub">Sign in to track your income &amp; expenses.</p>
+        <div class="auth-tabs">
+          <button data-mode="signin" class="active">Sign in</button>
+          <button data-mode="signup">Sign up</button>
+        </div>
+        <form id="authForm">
+          <div style="margin-bottom: 10px">
+            <label>Email</label
+            ><input type="email" id="authEmail" autocomplete="email" required />
+          </div>
+          <div style="margin-bottom: 10px">
+            <label>Password</label
+            ><input
+              type="password"
+              id="authPassword"
+              autocomplete="current-password"
+              required
+              minlength="6"
+            />
+          </div>
+          <button type="submit" class="btn" style="width: 100%" id="authBtn">
+            Sign in
+          </button>
+          <div class="err" id="authErr"></div>
+          <div class="msg" id="authMsg"></div>
+        </form>
+        <button
+          type="button"
+          class="link-btn"
+          id="forgotBtn"
+          style="display: block; margin: 12px auto 0"
+        >
+          Forgot password?
+        </button>
+
+        <form id="resetForm" class="hidden">
+          <p class="sub" style="margin-top: 0">
+            Enter your email and we'll send a reset link.
+          </p>
+          <div style="margin-bottom: 10px">
+            <label>Email</label><input type="email" id="resetEmail" required />
+          </div>
+          <button type="submit" class="btn" style="width: 100%" id="resetBtn">
+            Send reset link
+          </button>
+          <button
+            type="button"
+            class="link-btn"
+            id="resetBack"
+            style="display: block; margin: 10px auto 0"
+          >
+            Back to sign in
+          </button>
+          <div class="err" id="resetErr"></div>
+          <div class="msg" id="resetMsg"></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="recoveryOverlay">
+      <div class="modal glass glow-accent">
+        <h3>Set a new password</h3>
+        <form id="recoveryForm">
+          <div style="margin-bottom: 10px">
+            <label>New password</label
+            ><input
+              type="password"
+              id="recoveryPassword"
+              autocomplete="new-password"
+              required
+              minlength="6"
+            />
+          </div>
+          <button
+            type="submit"
+            class="btn"
+            style="width: 100%"
+            id="recoverySave"
+          >
+            Update password
+          </button>
+          <div class="err" id="recoveryErr"></div>
+        </form>
+      </div>
+    </div>
+
+    <div class="wrap" id="appScreen" style="display: none">
+      <header>
+        <h1>Ledger</h1>
+        <div>
+          <div class="avatar" id="avatarBtn">•</div>
+          <div class="acct-menu glass hidden" id="acctMenu">
+            <div class="email" id="userEmail"></div>
+            <button id="openProfile">Profile</button>
+            <button id="openSettings">Currency &amp; export</button>
+            <button id="signOutBtn">Sign out</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="tabs">
+        <button data-view="dash" class="active">Dashboard</button>
+        <button data-view="add">Add entry</button>
+        <button data-view="history">History</button>
+        <div class="kbd-hint">
+          Press <kbd>N</kbd> to add an entry<br />Press <kbd>/</kbd> to search
+        </div>
+      </div>
+
+      <div class="view active" id="view-dash">
+        <div class="summary">
+          <div class="card glass glow-accent balance">
+            <div class="eyebrow">Balance</div>
+            <div class="value num" id="sumBalance">—</div>
+          </div>
+          <div class="card glass glow-in income">
+            <div class="eyebrow">Income</div>
+            <div class="value num" id="sumIncome">—</div>
+          </div>
+          <div class="card glass glow-out expense">
+            <div class="eyebrow">Expenses</div>
+            <div class="value num" id="sumExpense">—</div>
+          </div>
+        </div>
+
+        <div class="dash-cols">
+          <div class="col-a">
+            <section id="chartSection" class="hidden">
+              <div class="sec-head"><h2>Last 6 months</h2></div>
+              <div class="chart-box glass">
+                <div class="legend">
+                  <span><span class="dot in"></span>Income</span>
+                  <span><span class="dot out"></span>Expense</span>
+                </div>
+                <div id="chartHolder"></div>
+              </div>
+            </section>
+
+            <section>
+              <div class="sec-head">
+                <h2>Spending by category · this month</h2>
+              </div>
+              <div id="bars"></div>
+            </section>
+          </div>
+          <div class="col-b">
+            <section id="quickAdd">
+              <div class="sec-head"><h2>Add entry</h2></div>
+            </section>
+
+            <section>
+              <div class="sec-head">
+                <h2>Recent entries</h2>
+                <button class="link-btn" id="viewAllBtn">View all →</button>
+              </div>
+              <div class="tx-list" id="recentList"></div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <div class="view" id="view-add">
+        <form class="entry-form glass" id="form">
+          <div class="full toggle">
+            <button type="button" data-t="expense" class="active">
+              Expense
+            </button>
+            <button type="button" data-t="income">Income</button>
+          </div>
+          <div>
+            <label>Amount</label
+            ><input type="number" id="amount" step="0.01" min="0" required />
+          </div>
+          <div>
+            <label>Category</label
+            ><select id="category"></select>
+          </div>
+          <div><label>Date</label><input type="date" id="date" required /></div>
+          <div>
+            <label>Note (optional)</label><input type="text" id="note" />
+          </div>
+          <button type="submit" class="btn full" id="addBtn">Add entry</button>
+        </form>
+      </div>
+
+      <div class="view" id="view-history">
+        <div class="filters">
+          <input
+            type="text"
+            id="fSearch"
+            placeholder="Search note or category"
+          />
+          <select id="fCategory">
+            <option value="">All categories</option>
+          </select>
+          <input type="date" id="fFrom" title="From date" />
+          <input type="date" id="fTo" title="To date" />
+        </div>
+        <div class="tx-list" id="historyList"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="editOverlay">
+      <div class="modal glass glow-accent">
+        <h3>Edit entry</h3>
+        <form id="editForm">
+          <div class="full toggle" style="margin-bottom: 10px">
+            <button type="button" data-t="expense">Expense</button>
+            <button type="button" data-t="income">Income</button>
+          </div>
+          <div style="margin-bottom: 10px">
+            <label>Amount</label
+            ><input
+              type="number"
+              id="editAmount"
+              step="0.01"
+              min="0"
+              required
+            />
+          </div>
+          <div style="margin-bottom: 10px">
+            <label>Category</label
+            ><select id="editCategory"></select>
+          </div>
+          <div style="margin-bottom: 10px">
+            <label>Date</label><input type="date" id="editDate" required />
+          </div>
+          <div><label>Note</label><input type="text" id="editNote" /></div>
+          <div class="modal-actions">
+            <button type="button" class="btn-secondary" id="editCancel">
+              Cancel
+            </button>
+            <button type="submit" class="btn" id="editSave">Save</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="profileOverlay">
+      <div class="modal glass glow-accent">
+        <h3>Profile</h3>
+        <div style="margin-bottom: 10px">
+          <label>Display name</label
+          ><input type="text" id="profileName" placeholder="Your name" />
+        </div>
+        <div class="modal-actions" style="margin-bottom: 16px">
+          <button type="button" class="btn" id="saveNameBtn" style="flex: 1">
+            Save name
+          </button>
+        </div>
+
+        <div style="margin-bottom: 10px">
+          <label>Email</label><input type="email" id="profileEmail" />
+        </div>
+        <div class="modal-actions" style="margin-bottom: 6px">
+          <button
+            type="button"
+            class="btn-secondary"
+            id="saveEmailBtn"
+            style="flex: 1"
+          >
+            Update email
+          </button>
+        </div>
+        <p class="sub" style="text-align: left; margin: 0 0 16px">
+          Changing email requires confirming it via a link sent to the new
+          address.
+        </p>
+
+        <div style="margin-bottom: 10px">
+          <label>New password</label
+          ><input
+            type="password"
+            id="profilePassword"
+            autocomplete="new-password"
+            minlength="6"
+            placeholder="Leave blank to keep current"
+          />
+        </div>
+        <div class="modal-actions" style="margin-bottom: 6px">
+          <button
+            type="button"
+            class="btn-secondary"
+            id="savePasswordBtn"
+            style="flex: 1"
+          >
+            Update password
+          </button>
+        </div>
+
+        <div class="err" id="profileErr"></div>
+        <div class="msg" id="profileMsg"></div>
+        <p class="sub" style="text-align: left; margin: 14px 0 0">
+          Member since <span id="profileSince"></span>
+        </p>
+        <div class="modal-actions">
+          <button type="button" class="btn" id="profileClose" style="flex: 1">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="currencyConfirmOverlay">
+      <div class="modal glass glow-accent">
+        <h3>Switch currency?</h3>
+        <p
+          class="sub"
+          style="text-align: left; margin: 0 0 16px"
+          id="currencyConfirmText"
+        ></p>
+        <div class="modal-actions" style="flex-direction: column">
+          <button
+            type="button"
+            class="btn"
+            id="convertYesBtn"
+            style="width: 100%; margin-bottom: 8px"
+          >
+            Convert my amounts
+          </button>
+          <button
+            type="button"
+            class="btn-secondary"
+            id="convertNoBtn"
+            style="width: 100%; margin-bottom: 8px"
+          >
+            Just switch, keep values
+          </button>
+          <button type="button" class="link-btn" id="convertCancelBtn">
+            Cancel
+          </button>
+        </div>
+        <div class="err" id="convertErr" style="margin-top: 8px"></div>
+      </div>
+    </div>
+
+    <div class="modal-overlay hidden" id="settingsOverlay">
+      <div class="modal glass glow-accent">
+        <h3>Currency &amp; export</h3>
+        <label>Display currency</label>
+        <select id="currencySelect" style="margin-bottom: 14px">
+          <option value="USD">USD — US Dollar</option>
+          <option value="EUR">EUR — Euro</option>
+          <option value="GBP">GBP — British Pound</option>
+          <option value="BDT">BDT — Bangladeshi Taka</option>
+          <option value="INR">INR — Indian Rupee</option>
+          <option value="JPY">JPY — Japanese Yen</option>
+          <option value="AUD">AUD — Australian Dollar</option>
+          <option value="CAD">CAD — Canadian Dollar</option>
+        </select>
+        <p class="sub" style="text-align: left; margin: 0 0 14px">
+          Changing this will ask whether to convert your existing amounts or
+          just relabel them.
+        </p>
+        <button
+          type="button"
+          class="btn-secondary"
+          style="width: 100%; margin-bottom: 16px"
+          id="exportBtn"
+        >
+          Export all entries as CSV
+        </button>
+
+        <label>Manage categories</label>
+        <div class="toggle" style="margin-bottom: 8px">
+          <button
+            type="button"
+            data-t="expense"
+            class="active"
+            id="catTypeExpense"
+          >
+            Expense
+          </button>
+          <button type="button" data-t="income" id="catTypeIncome">
+            Income
+          </button>
+        </div>
+        <div
+          id="catChips"
+          style="display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px"
+        ></div>
+        <div style="display: flex; gap: 6px; margin-bottom: 16px">
+          <input
+            type="text"
+            id="newCatName"
+            placeholder="New category name"
+            style="flex: 1"
+          />
+          <button type="button" class="btn-secondary" id="addCatBtn">
+            Add
+          </button>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn" id="settingsClose" style="flex: 1">
+            Done
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast glass hidden" id="toast"></div>
+
+    <script>
+      const SUPABASE_URL = "https://wqdxlqduwaklmxxrjugt.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_iOBTMeFyLnPC_Dp5HKWRAQ_lwhnsopC";
+      const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+      const $ = (id) => document.getElementById(id);
+
+      const EXP_CATS = [
+        "Food",
+        "Rent",
+        "Transport",
+        "Utilities",
+        "Health",
+        "Shopping",
+        "Entertainment",
+        "Other",
+      ];
+      const INC_CATS = ["Salary", "Freelance", "Gift", "Interest", "Other"];
+      let type = "expense";
+      let editType = "expense";
+      let data = [];
+      let activeUserId = null;
+      let authMode = "signin";
+      let currency = "USD";
+      let pendingDelete = null;
+      let customCats = { expense: [], income: [] };
+      let catMgrType = "expense";
+
+      function localDateKey(d = new Date()) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      }
+      function fmt(n) {
+        try {
+          return new Intl.NumberFormat(undefined, {
+            style: "currency",
+            currency,
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          }).format(n);
+        } catch (e) {
+          return (n < 0 ? "-" : "") + currency + " " + Math.abs(n).toFixed(2);
+        }
+      }
+      function niceMax(v) {
+        if (v <= 0) return 10;
+        const mag = Math.pow(10, Math.floor(Math.log10(v)));
+        const norm = v / mag;
+        const step = norm <= 1 ? 1 : norm <= 2 ? 2 : norm <= 5 ? 5 : 10;
+        return step * mag;
+      }
+      function fmtShort(n) {
+        return n >= 1000
+          ? Math.round(n / 1000) + "k"
+          : Math.round(n).toString();
+      }
+
+      const cooldownTimers = new WeakMap();
+      function clearCooldown(btn, label) {
+        clearInterval(cooldownTimers.get(btn));
+        cooldownTimers.delete(btn);
+        btn.disabled = false;
+        if (label) btn.textContent = label;
+      }
+      function startCooldown(btn, label, seconds) {
+        clearCooldown(btn);
+        let left = seconds;
+        btn.disabled = true;
+        const tick = () => {
+          if (left <= 0) {
+            clearCooldown(btn, label);
+            return;
+          }
+          btn.textContent = `${label} (${left}s)`;
+          left--;
+        };
+        cooldownTimers.set(btn, setInterval(tick, 1000));
+        tick();
+      }
+      function friendlyAuthError(error) {
+        const m = error.message || "";
+        const secs = parseInt((m.match(/after (\d+) seconds?/i) || [])[1], 10);
+        if (secs)
+          return {
+            text: `We just sent an email — please wait ${secs} seconds before trying again.`,
+            cooldown: secs,
+          };
+        if (error.status === 429 || /rate limit/i.test(m))
+          return {
+            text: "Too many emails have been sent recently. Please wait a few minutes and try again.",
+            cooldown: 60,
+          };
+        return { text: m, cooldown: 0 };
+      }
+
+      document.querySelectorAll(".auth-tabs button").forEach((b) => {
+        b.addEventListener("click", () => {
+          document
+            .querySelectorAll(".auth-tabs button")
+            .forEach((x) => x.classList.remove("active"));
+          b.classList.add("active");
+          authMode = b.dataset.mode;
+          clearCooldown($("authBtn"));
+          $("authBtn").textContent =
+            authMode === "signin" ? "Sign in" : "Sign up";
+          $("authErr").textContent = "";
+          $("authMsg").textContent = "";
+          $("authEmail").value = "";
+          $("authPassword").value = "";
+          $("authPassword").setAttribute(
+            "autocomplete",
+            authMode === "signup" ? "new-password" : "current-password",
+          );
+        });
+      });
+      $("authForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        $("authErr").textContent = "";
+        $("authMsg").textContent = "";
+        $("authBtn").disabled = true;
+        const email = $("authEmail").value.trim();
+        const password = $("authPassword").value;
+        const { error } =
+          authMode === "signin"
+            ? await sb.auth.signInWithPassword({ email, password })
+            : await sb.auth.signUp({
+                email,
+                password,
+                options: { emailRedirectTo: window.location.origin },
+              });
+        const label = authMode === "signin" ? "Sign in" : "Sign up";
+        if (error) {
+          const f = friendlyAuthError(error);
+          $("authErr").textContent = f.text;
+          if (f.cooldown && authMode === "signup")
+            startCooldown($("authBtn"), label, f.cooldown);
+          else clearCooldown($("authBtn"), label);
+          return;
+        }
+        if (authMode === "signup") {
+          $("authMsg").textContent =
+            "Account created. Check your email (and spam folder) for the confirmation link.";
+          startCooldown($("authBtn"), label, 60);
+        } else clearCooldown($("authBtn"), label);
+      });
+      $("avatarBtn").addEventListener("click", () =>
+        $("acctMenu").classList.toggle("hidden"),
+      );
+      document.addEventListener("click", (e) => {
+        if (!$("acctMenu").contains(e.target) && e.target !== $("avatarBtn"))
+          $("acctMenu").classList.add("hidden");
+      });
+      $("signOutBtn").addEventListener("click", async () => {
+        await sb.auth.signOut();
+      });
+      $("forgotBtn").addEventListener("click", () => {
+        $("authForm").classList.add("hidden");
+        $("forgotBtn").classList.add("hidden");
+        $("resetForm").classList.remove("hidden");
+        $("resetErr").textContent = "";
+        $("resetMsg").textContent = "";
+      });
+      $("resetBack").addEventListener("click", () => {
+        $("resetForm").classList.add("hidden");
+        $("authForm").classList.remove("hidden");
+        $("forgotBtn").classList.remove("hidden");
+      });
+      $("resetForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        $("resetErr").textContent = "";
+        $("resetMsg").textContent = "";
+        $("resetBtn").disabled = true;
+        const email = $("resetEmail").value.trim();
+        const { error } = await sb.auth.resetPasswordForEmail(email, {
+          redirectTo: window.location.origin,
+        });
+        if (error) {
+          const f = friendlyAuthError(error);
+          $("resetErr").textContent = f.text;
+          if (f.cooldown)
+            startCooldown($("resetBtn"), "Send reset link", f.cooldown);
+          else clearCooldown($("resetBtn"), "Send reset link");
+          return;
+        }
+        $("resetMsg").textContent =
+          "If that email has an account, a reset link is on its way. Check your spam folder too.";
+        startCooldown($("resetBtn"), "Send reset link", 60);
+      });
+      $("recoveryForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        $("recoveryErr").textContent = "";
+        $("recoverySave").disabled = true;
+        const { error } = await sb.auth.updateUser({
+          password: $("recoveryPassword").value,
+        });
+        $("recoverySave").disabled = false;
+        if (error) {
+          $("recoveryErr").textContent = error.message;
+          return;
+        }
+        $("recoveryOverlay").classList.add("hidden");
+        $("recoveryPassword").value = "";
+      });
+      sb.auth.onAuthStateChange((event, session) => {
+        if (event === "PASSWORD_RECOVERY") {
+          $("recoveryOverlay").classList.remove("hidden");
+        }
+        if (session) {
+          if (activeUserId !== session.user.id) {
+            activeUserId = session.user.id;
+            data = [];
+            customCats = { expense: [], income: [] };
+            render();
+          }
+          $("authScreen").style.display = "none";
+          $("appScreen").style.display = "block";
+          $("userEmail").textContent = session.user.email;
+          $("avatarBtn").textContent = session.user.email[0].toUpperCase();
+          currency = session.user.user_metadata?.currency || "USD";
+          $("currencySelect").value = currency;
+          if (window.location.hash.includes("access_token")) {
+            history.replaceState(null, "", window.location.pathname);
+          }
+          loadData();
+        } else {
+          activeUserId = null;
+          data = [];
+          customCats = { expense: [], income: [] };
+          render();
+          $("appScreen").style.display = "none";
+          $("authScreen").style.display = "block";
+        }
+      });
+
+      $("currencySelect").value = currency;
+      $("openSettings").addEventListener("click", () => {
+        $("acctMenu").classList.add("hidden");
+        $("settingsOverlay").classList.remove("hidden");
+      });
+      $("settingsClose").addEventListener("click", () =>
+        $("settingsOverlay").classList.add("hidden"),
+      );
+
+      async function fetchRate(from, to) {
+        const f = from.toLowerCase(),
+          t = to.toLowerCase();
+        const sources = [
+          `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/${f}.json`,
+          `https://latest.currency-api.pages.dev/v1/currencies/${f}.json`,
+        ];
+        for (const url of sources) {
+          try {
+            const res = await fetch(url);
+            if (!res.ok) continue;
+            const rate = (await res.json())[f]?.[t];
+            if (typeof rate === "number" && isFinite(rate) && rate > 0)
+              return rate;
+          } catch (e) {
+            /* try the next source */
+          }
+        }
+        return null;
+      }
+
+      let pendingCurrency = null;
+      $("currencySelect").addEventListener("change", (e) => {
+        const newCur = e.target.value;
+        if (newCur === currency) return;
+        pendingCurrency = newCur;
+        $("currencyConfirmText").textContent =
+          `You're switching from ${currency} to ${newCur}. Convert your existing amounts using today's exchange rate, or just relabel the display currency and keep the numbers as they are?`;
+        $("convertErr").textContent = "";
+        $("currencyConfirmOverlay").classList.remove("hidden");
+      });
+      function cancelCurrencyChange() {
+        $("currencySelect").value = currency;
+        pendingCurrency = null;
+        $("currencyConfirmOverlay").classList.add("hidden");
+      }
+      $("convertCancelBtn").addEventListener("click", cancelCurrencyChange);
+      $("convertNoBtn").addEventListener("click", async () => {
+        currency = pendingCurrency;
+        pendingCurrency = null;
+        $("currencyConfirmOverlay").classList.add("hidden");
+        render();
+        await sb.auth.updateUser({ data: { currency } });
+      });
+      $("convertYesBtn").addEventListener("click", async () => {
+        const oldCur = currency,
+          newCur = pendingCurrency;
+        $("convertErr").textContent = "";
+        $("convertYesBtn").disabled = true;
+        $("convertYesBtn").textContent = "Converting…";
+        try {
+          const rate = await fetchRate(oldCur, newCur);
+          if (!rate) throw new Error("rate");
+          // One atomic database call: converts every amount and saves the new currency together.
+          const { error } = await sb.rpc("convert_currency", {
+            rate,
+            new_currency: newCur,
+          });
+          if (error) throw new Error("db");
+          await sb.auth.refreshSession();
+          currency = newCur;
+          pendingCurrency = null;
+          $("currencyConfirmOverlay").classList.add("hidden");
+          await loadData();
+        } catch (err) {
+          $("convertErr").textContent =
+            err.message === "db"
+              ? "The conversion couldn't be saved, so nothing was changed. Please try again."
+              : 'Couldn\'t fetch a live exchange rate right now — try again, or choose "Just switch" instead.';
+        }
+        $("convertYesBtn").disabled = false;
+        $("convertYesBtn").textContent = "Convert my amounts";
+      });
+      $("exportBtn").addEventListener("click", () => {
+        const columns = ["date", "type", "category", "amount", "note"];
+        const csvCell = (value) => {
+          let text = String(value ?? "");
+          if (/^[\s\u0000-\u001f]*[=+@-]/.test(text)) text = "'" + text;
+          return `"${text.replace(/"/g, '""')}"`;
+        };
+        const header = columns.map(csvCell).join(",") + "\r\n";
+        const rows = data
+          .map((t) =>
+            [t.date, t.type, t.category, t.amount, t.note || ""]
+              .map(csvCell)
+              .join(","),
+          )
+          .join("\r\n");
+        const blob = new Blob([header + rows], { type: "text/csv" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = "ledger-export.csv";
+        a.click();
+      });
+
+      $("openProfile").addEventListener("click", async () => {
+        $("acctMenu").classList.add("hidden");
+        $("profileErr").textContent = "";
+        $("profileMsg").textContent = "";
+        $("profilePassword").value = "";
+        const {
+          data: { user },
+        } = await sb.auth.getUser();
+        $("profileName").value = user.user_metadata?.full_name || "";
+        $("profileEmail").value = user.email;
+        $("profileSince").textContent = new Date(
+          user.created_at,
+        ).toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+        $("profileOverlay").classList.remove("hidden");
+      });
+      $("profileClose").addEventListener("click", () =>
+        $("profileOverlay").classList.add("hidden"),
+      );
+      $("saveNameBtn").addEventListener("click", async () => {
+        $("profileErr").textContent = "";
+        $("profileMsg").textContent = "";
+        const { error } = await sb.auth.updateUser({
+          data: { full_name: $("profileName").value.trim() },
+        });
+        if (error) {
+          $("profileErr").textContent = error.message;
+          return;
+        }
+        $("profileMsg").textContent = "Name saved.";
+      });
+      $("saveEmailBtn").addEventListener("click", async () => {
+        $("profileErr").textContent = "";
+        $("profileMsg").textContent = "";
+        const newEmail = $("profileEmail").value.trim();
+        const { error } = await sb.auth.updateUser(
+          { email: newEmail },
+          { emailRedirectTo: window.location.origin },
+        );
+        if (error) {
+          $("profileErr").textContent = error.message;
+          return;
+        }
+        $("profileMsg").textContent =
+          "Check your new email to confirm the change.";
+      });
+      $("savePasswordBtn").addEventListener("click", async () => {
+        $("profileErr").textContent = "";
+        $("profileMsg").textContent = "";
+        const pw = $("profilePassword").value;
+        if (!pw) {
+          $("profileErr").textContent = "Enter a new password first.";
+          return;
+        }
+        const { error } = await sb.auth.updateUser({ password: pw });
+        if (error) {
+          $("profileErr").textContent = error.message;
+          return;
+        }
+        $("profilePassword").value = "";
+        $("profileMsg").textContent = "Password updated.";
+      });
+
+      const wideMQ = window.matchMedia("(min-width:1000px)");
+      function showView(name) {
+        if (name === "add" && wideMQ.matches) {
+          name = "dash";
+          setTimeout(() => $("amount").focus(), 0);
+        }
+        document
+          .querySelectorAll(".tabs button")
+          .forEach((x) =>
+            x.classList.toggle("active", x.dataset.view === name),
+          );
+        document
+          .querySelectorAll(".view")
+          .forEach((x) => x.classList.remove("active"));
+        $("view-" + name).classList.add("active");
+      }
+      document
+        .querySelectorAll(".tabs button")
+        .forEach((b) =>
+          b.addEventListener("click", () => showView(b.dataset.view)),
+        );
+      $("viewAllBtn").addEventListener("click", () => showView("history"));
+
+      $("date").value = localDateKey();
+      function fillCats(sel, t) {
+        const current = sel.value;
+        sel.innerHTML = "";
+        const all = [
+          ...(t === "expense" ? EXP_CATS : INC_CATS),
+          ...customCats[t],
+        ];
+        all.forEach((c) => {
+          const o = document.createElement("option");
+          o.value = c;
+          o.textContent = c;
+          sel.appendChild(o);
+        });
+        if (current && all.includes(current)) sel.value = current;
+      }
+      function refreshAllCategorySelects() {
+        fillCats($("category"), type);
+        fillCats($("editCategory"), editType);
+      }
+      fillCats($("category"), type);
+      document.querySelectorAll("#form .toggle button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll("#form .toggle button")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          type = btn.dataset.t;
+          fillCats($("category"), type);
+        });
+      });
+      $("form").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const amount = parseFloat($("amount").value);
+        if (!amount || amount <= 0) return;
+        const {
+          data: { user },
+        } = await sb.auth.getUser();
+        $("addBtn").disabled = true;
+        const { error } = await sb.from("transactions").insert({
+          user_id: user.id,
+          type,
+          amount,
+          category: $("category").value,
+          date: $("date").value,
+          note: $("note").value.trim(),
+        });
+        $("addBtn").disabled = false;
+        if (!error) {
+          $("amount").value = "";
+          $("note").value = "";
+          await loadData();
+          showView("dash");
+          if (wideMQ.matches) $("amount").focus();
+        }
+      });
+
+      fillCats($("editCategory"), "expense");
+      document.querySelectorAll("#editForm .toggle button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll("#editForm .toggle button")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          editType = btn.dataset.t;
+          fillCats($("editCategory"), editType);
+        });
+      });
+      let editingId = null;
+      function openEdit(t) {
+        editingId = t.id;
+        editType = t.type;
+        document
+          .querySelectorAll("#editForm .toggle button")
+          .forEach((b) =>
+            b.classList.toggle("active", b.dataset.t === editType),
+          );
+        fillCats($("editCategory"), editType);
+        $("editAmount").value = t.amount;
+        $("editCategory").value = t.category;
+        $("editDate").value = t.date;
+        $("editNote").value = t.note || "";
+        $("editOverlay").classList.remove("hidden");
+      }
+      $("editCancel").addEventListener("click", () =>
+        $("editOverlay").classList.add("hidden"),
+      );
+      $("editForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        $("editSave").disabled = true;
+        const { error } = await sb
+          .from("transactions")
+          .update({
+            type: editType,
+            amount: parseFloat($("editAmount").value),
+            category: $("editCategory").value,
+            date: $("editDate").value,
+            note: $("editNote").value.trim(),
+          })
+          .eq("id", editingId);
+        $("editSave").disabled = false;
+        if (!error) {
+          $("editOverlay").classList.add("hidden");
+          await loadData();
+        }
+      });
+
+      function showToast(msg, onUndo) {
+        const toast = $("toast");
+        toast.innerHTML = `<span>${msg}</span>`;
+        const btn = document.createElement("button");
+        btn.textContent = "Undo";
+        btn.addEventListener("click", onUndo);
+        toast.appendChild(btn);
+        toast.classList.remove("hidden");
+      }
+      function hideToast() {
+        $("toast").classList.add("hidden");
+      }
+      function requestDelete(t) {
+        if (pendingDelete) finalizePendingDelete();
+        data = data.filter((x) => x.id !== t.id);
+        render();
+        const timer = setTimeout(() => finalizePendingDelete(), 6000);
+        pendingDelete = { entry: t, timer };
+        showToast("Entry deleted.", undoDelete);
+      }
+      function undoDelete() {
+        if (!pendingDelete) return;
+        clearTimeout(pendingDelete.timer);
+        data.push(pendingDelete.entry);
+        pendingDelete = null;
+        hideToast();
+        render();
+      }
+      async function finalizePendingDelete() {
+        if (!pendingDelete) return;
+        const { entry } = pendingDelete;
+        pendingDelete = null;
+        hideToast();
+        await sb.from("transactions").delete().eq("id", entry.id);
+      }
+
+      async function fetchAllTransactions() {
+        const PAGE = 1000;
+        let from = 0;
+        let all = [];
+        while (true) {
+          const { data: rows, error } = await sb
+            .from("transactions")
+            .select("*")
+            .order("date", { ascending: false })
+            .order("created_at", { ascending: false })
+            .order("id")
+            .range(from, from + PAGE - 1);
+          if (error) return null;
+          all = all.concat(rows || []);
+          if (!rows || rows.length < PAGE) break;
+          from += PAGE;
+        }
+        return all;
+      }
+      async function loadData() {
+        const expectedUserId = activeUserId;
+        if (!expectedUserId) return;
+        const rows = await fetchAllTransactions();
+        if (!rows || expectedUserId !== activeUserId) return;
+        data = rows;
+        const { data: catRows, error } = await sb
+          .from("categories")
+          .select("*")
+          .order("name");
+        if (error || expectedUserId !== activeUserId) return;
+        customCats = { expense: [], income: [] };
+        (catRows || []).forEach((c) => {
+          customCats[c.type] = customCats[c.type] || [];
+          customCats[c.type].push(c.name);
+        });
+        refreshAllCategorySelects();
+        renderCatChips();
+        populateCategoryFilter();
+        render();
+      }
+
+      function renderCatChips() {
+        const holder = $("catChips");
+        holder.innerHTML = "";
+        const defaults = catMgrType === "expense" ? EXP_CATS : INC_CATS;
+        defaults.forEach((name) => {
+          const chip = document.createElement("span");
+          chip.className = "chip default";
+          chip.textContent = name;
+          holder.appendChild(chip);
+        });
+        (customCats[catMgrType] || []).forEach((name) => {
+          const chip = document.createElement("span");
+          chip.className = "chip";
+          chip.append(document.createTextNode(name + " "));
+          const button = document.createElement("button");
+          button.dataset.name = name;
+          button.title = "Remove";
+          button.textContent = "✕";
+          chip.appendChild(button);
+          holder.appendChild(chip);
+        });
+        holder.querySelectorAll("button[data-name]").forEach((b) => {
+          b.addEventListener("click", () =>
+            removeCategory(catMgrType, b.dataset.name),
+          );
+        });
+      }
+      document
+        .querySelectorAll("#catTypeExpense, #catTypeIncome")
+        .forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document
+              .querySelectorAll("#catTypeExpense, #catTypeIncome")
+              .forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            catMgrType = btn.dataset.t;
+            renderCatChips();
+          });
+        });
+      $("addCatBtn").addEventListener("click", async () => {
+        const name = $("newCatName").value.trim();
+        if (!name) return;
+        const {
+          data: { user },
+        } = await sb.auth.getUser();
+        const { error } = await sb
+          .from("categories")
+          .insert({ user_id: user.id, type: catMgrType, name });
+        if (!error) {
+          $("newCatName").value = "";
+          customCats[catMgrType] = customCats[catMgrType] || [];
+          if (!customCats[catMgrType].includes(name))
+            customCats[catMgrType].push(name);
+          renderCatChips();
+          refreshAllCategorySelects();
+          populateCategoryFilter();
+        }
+      });
+      async function removeCategory(t, name) {
+        const {
+          data: { user },
+        } = await sb.auth.getUser();
+        await sb
+          .from("categories")
+          .delete()
+          .match({ user_id: user.id, type: t, name });
+        customCats[t] = (customCats[t] || []).filter((n) => n !== name);
+        renderCatChips();
+        refreshAllCategorySelects();
+        populateCategoryFilter();
+      }
+
+      function populateCategoryFilter() {
+        const sel = $("fCategory");
+        const current = sel.value;
+        const cats = [...new Set(data.map((t) => t.category))].sort();
+        sel.innerHTML =
+          '<option value="">All categories</option>' +
+          cats
+            .map(
+              (c) =>
+                `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`,
+            )
+            .join("");
+        sel.value = current;
+      }
+      ["fSearch", "fCategory", "fFrom", "fTo"].forEach((id) =>
+        $(id).addEventListener("input", renderHistory),
+      );
+      function filteredData() {
+        const q = $("fSearch").value.trim().toLowerCase();
+        const cat = $("fCategory").value;
+        const from = $("fFrom").value;
+        const to = $("fTo").value;
+        return data.filter((t) => {
+          if (
+            q &&
+            !(
+              (t.note || "").toLowerCase().includes(q) ||
+              t.category.toLowerCase().includes(q)
+            )
+          )
+            return false;
+          if (cat && t.category !== cat) return false;
+          if (from && t.date < from) return false;
+          if (to && t.date > to) return false;
+          return true;
+        });
+      }
+      function escapeHtml(s) {
+        return String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c],
+        );
+      }
+      function txRow(t, showActions = true) {
+        const row = document.createElement("div");
+        row.className = "tx glass";
+        row.innerHTML = `
+    <div class="tx-left">
+      <div class="tx-cat">${escapeHtml(t.category)}${t.note ? " · " + escapeHtml(t.note) : ""}</div>
+      <div class="tx-meta">${t.date}</div>
+    </div>
+    <div class="tx-amt num" style="color:${t.type === "income" ? "var(--income)" : "var(--expense)"}; text-shadow:0 0 10px ${t.type === "income" ? "var(--income-glow)" : "var(--expense-glow)"}">
+      ${t.type === "income" ? "+" : "−"}${fmt(Math.abs(Number(t.amount)))}
+    </div>
+    <div class="tx-actions">
+      ${
+        showActions
+          ? `<button class="icon-btn edit-btn" data-id="${t.id}" title="Edit">✎</button>
+      <button class="icon-btn danger del-btn" data-id="${t.id}" title="Delete">🗑</button>`
+          : ""
+      }
+    </div>`;
+        return row;
+      }
+      function wireRowActions(container) {
+        container.querySelectorAll(".edit-btn").forEach((b) =>
+          b.addEventListener("click", () => {
+            const t = data.find((x) => String(x.id) === b.dataset.id);
+            if (t) openEdit(t);
+          }),
+        );
+        container.querySelectorAll(".del-btn").forEach((b) =>
+          b.addEventListener("click", () => {
+            const t = data.find((x) => String(x.id) === b.dataset.id);
+            if (t) requestDelete(t);
+          }),
+        );
+      }
+      function renderHistory() {
+        const list = $("historyList");
+        list.innerHTML = "";
+        const rows = filteredData();
+        if (rows.length === 0) {
+          list.innerHTML =
+            '<div class="empty">No entries match your filters.</div>';
+          return;
+        }
+        if (wideMQ.matches) {
+          renderHistoryTable(list, rows);
+          return;
+        }
+        rows.forEach((t) => list.appendChild(txRow(t)));
+        wireRowActions(list);
+      }
+
+      function render() {
+        let inTotal = 0,
+          outTotal = 0;
+        data.forEach((t) =>
+          t.type === "income"
+            ? (inTotal += Number(t.amount))
+            : (outTotal += Number(t.amount)),
+        );
+        $("sumBalance").textContent = fmt(inTotal - outTotal);
+        $("sumIncome").textContent = fmt(inTotal);
+        $("sumExpense").textContent = fmt(outTotal);
+
+        const now = new Date();
+        const monthKey = localDateKey(now).slice(0, 7);
+        const byCat = {};
+        data
+          .filter(
+            (t) => t.type === "expense" && t.date.slice(0, 7) === monthKey,
+          )
+          .forEach((t) => {
+            byCat[t.category] = (byCat[t.category] || 0) + Number(t.amount);
+          });
+        const totalCat = Object.values(byCat).reduce((a, b) => a + b, 0) || 1;
+        const maxCat = Math.max(1, ...Object.values(byCat));
+        const barsEl = $("bars");
+        barsEl.innerHTML = "";
+        const sortedCat = Object.entries(byCat).sort((a, b) => b[1] - a[1]);
+        if (sortedCat.length === 0) {
+          barsEl.innerHTML =
+            '<div class="empty">No expenses logged this month yet.</div>';
+        } else
+          sortedCat.forEach(([cat, amt]) => {
+            const row = document.createElement("div");
+            row.className = "bar-row";
+            row.innerHTML = `<div class="name">${escapeHtml(cat)}</div>
+      <div class="bar-track"><div class="bar-fill" style="width:${((amt / maxCat) * 100).toFixed(0)}%"></div></div>
+      <div class="bar-pct">${Math.round((amt / totalCat) * 100)}%</div>
+      <div class="bar-amt num">${fmt(amt)}</div>`;
+            barsEl.appendChild(row);
+          });
+
+        const months = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          months.push({
+            key: localDateKey(d).slice(0, 7),
+            label: d.toLocaleDateString(undefined, { month: "short" }),
+            inc: 0,
+            exp: 0,
+          });
+        }
+        data.forEach((t) => {
+          const m = months.find((x) => x.key === t.date.slice(0, 7));
+          if (m) {
+            if (t.type === "income") m.inc += Number(t.amount);
+            else m.exp += Number(t.amount);
+          }
+        });
+        const hasChartData = months.some((m) => m.inc > 0 || m.exp > 0);
+        const holder = $("chartHolder");
+        holder.innerHTML = "";
+        $("chartSection").classList.toggle("hidden", !hasChartData);
+        if (hasChartData) {
+          const scale = niceMax(
+            Math.max(...months.map((m) => Math.max(m.inc, m.exp))),
+          );
+          const chart = document.createElement("div");
+          chart.className = "chart";
+          [0, 0.5, 1].forEach((f) => {
+            const gl = document.createElement("div");
+            gl.className = "gridline";
+            gl.style.bottom = f * 100 + "%";
+            gl.innerHTML = `<span class="gl-label">${fmtShort(scale * f)}</span>`;
+            chart.appendChild(gl);
+          });
+          const barsRow = document.createElement("div");
+          barsRow.className = "bars-row";
+          months.forEach((m) => {
+            const col = document.createElement("div");
+            col.className = "bar-col";
+            col.innerHTML = `<div class="bar-pair">
+          <div class="b-in" style="height:${((m.inc / scale) * 100).toFixed(0)}%" title="Income ${fmt(m.inc)}"></div>
+          <div class="b-out" style="height:${((m.exp / scale) * 100).toFixed(0)}%" title="Expense ${fmt(m.exp)}"></div>
+        </div>
+        <div class="bar-label">${m.label}</div>`;
+            barsRow.appendChild(col);
+          });
+          chart.appendChild(barsRow);
+          holder.appendChild(chart);
+        }
+
+        const recent = $("recentList");
+        recent.innerHTML = "";
+        if (data.length === 0) {
+          recent.innerHTML =
+            '<div class="empty">Nothing logged yet. Add your first entry.</div>';
+        } else {
+          data.slice(0, 5).forEach((t) => recent.appendChild(txRow(t)));
+          wireRowActions(recent);
+        }
+
+        renderHistory();
+      }
+
+      /* ---- large-screen behaviour ---- */
+      let sortKey = "date",
+        sortDir = -1;
+      function renderHistoryTable(list, rows) {
+        const cols = [
+          ["date", "Date"],
+          ["category", "Category"],
+          ["note", "Note"],
+          ["amount", "Amount"],
+        ];
+        const val = (t, k) =>
+          k === "amount"
+            ? Number(t.amount) * (t.type === "income" ? 1 : -1)
+            : String(t[k] || "").toLowerCase();
+        rows = [...rows].sort((a, b) => {
+          const x = val(a, sortKey),
+            y = val(b, sortKey);
+          return (x < y ? -1 : x > y ? 1 : 0) * sortDir;
+        });
+        const tbl = document.createElement("table");
+        tbl.className = "tx-table";
+        tbl.innerHTML =
+          "<thead><tr>" +
+          cols
+            .map(
+              ([k, l]) =>
+                `<th data-k="${k}" class="${k === "amount" ? "r" : ""}">${l}${sortKey === k ? (sortDir > 0 ? " ↑" : " ↓") : ""}</th>`,
+            )
+            .join("") +
+          "<th></th></tr></thead>";
+        const tb = document.createElement("tbody");
+        rows.forEach((t) => {
+          const tr = document.createElement("tr"),
+            inc = t.type === "income";
+          tr.innerHTML = `<td class="num">${t.date}</td><td>${escapeHtml(t.category)}</td><td class="note">${escapeHtml(t.note || "")}</td>
+      <td class="r num" style="color:${inc ? "var(--income)" : "var(--expense)"}">${inc ? "+" : "−"}${fmt(Math.abs(Number(t.amount)))}</td>
+      <td class="acts"><button class="icon-btn edit-btn" data-id="${t.id}" title="Edit">✎</button><button class="icon-btn danger del-btn" data-id="${t.id}" title="Delete">🗑</button></td>`;
+          tb.appendChild(tr);
+        });
+        tbl.appendChild(tb);
+        list.appendChild(tbl);
+        tbl.querySelectorAll("th[data-k]").forEach((th) =>
+          th.addEventListener("click", () => {
+            const k = th.dataset.k;
+            if (sortKey === k) sortDir *= -1;
+            else {
+              sortKey = k;
+              sortDir = k === "date" || k === "amount" ? -1 : 1;
+            }
+            renderHistory();
+          }),
+        );
+        wireRowActions(list);
+      }
+      function placeForm() {
+        (wideMQ.matches ? $("quickAdd") : $("view-add")).appendChild($("form"));
+      }
+      wideMQ.addEventListener("change", () => {
+        placeForm();
+        renderHistory();
+      });
+      placeForm();
+
+      document.addEventListener("keydown", (e) => {
+        if (e.metaKey || e.ctrlKey || e.altKey) return;
+        if (e.key === "Escape") {
+          if (!$("currencyConfirmOverlay").classList.contains("hidden"))
+            cancelCurrencyChange();
+          document.querySelectorAll(".modal-overlay").forEach((o) => {
+            if (o.id !== "recoveryOverlay") o.classList.add("hidden");
+          });
+          $("acctMenu").classList.add("hidden");
+          return;
+        }
+        const tag = (e.target.tagName || "").toLowerCase();
+        if (
+          ["input", "textarea", "select"].includes(tag) ||
+          $("appScreen").style.display === "none"
+        )
+          return;
+        if (document.querySelector(".modal-overlay:not(.hidden)")) return;
+        if (e.key === "n" || e.key === "N") {
+          e.preventDefault();
+          showView("add");
+          setTimeout(() => $("amount").focus(), 0);
+        } else if (e.key === "/") {
+          e.preventDefault();
+          showView("history");
+          setTimeout(() => $("fSearch").focus(), 0);
+        }
+      });
+    </script>
+  </body>
+</html>
